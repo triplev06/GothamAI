@@ -81,8 +81,8 @@ const VoiceInput = ({ onTranscript, isAssistantSpeaking }: VoiceInputProps) => {
         size="lg"
         className={`rounded-full w-16 h-16 transition-all duration-300 ${
           isRecording
-            ? "bg-destructive hover:bg-destructive/90 animate-pulse shadow-lg shadow-destructive/50"
-            : "bg-gradient-to-br from-primary to-primary/80 hover:scale-110 shadow-lg shadow-primary/30"
+            ? "bg-destructive hover:bg-destructive/90 animate-pulse shadow-lg"
+            : "bg-primary hover:bg-primary/90 hover:scale-105 shadow-md border-2 border-accent"
         }`}
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing || isAssistantSpeaking}
