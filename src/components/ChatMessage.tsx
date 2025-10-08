@@ -16,7 +16,7 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
       )}
     >
       {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/30">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md border border-accent">
           <Bot className="w-5 h-5 text-primary-foreground" />
         </div>
       )}

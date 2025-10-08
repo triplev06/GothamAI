@@ -14,7 +14,7 @@ interface Message {
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { text: "Hello! I'm your virtual assistant. How can I help you today?", isUser: false }
+    { text: "Good day. I am Alfred, at your service. How may I assist you today?", isUser: false }
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -93,11 +93,11 @@ const ChatInterface = () => {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4 shadow-md">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Virtual Assistant
+          <h1 className="text-2xl font-bold text-primary">
+            Alfred Pennyworth
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Ask me anything - I'm here to help!
+            Your trusted assistant, at your service
           </p>
         </div>
       </div>
