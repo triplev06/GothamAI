@@ -10,38 +10,44 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) => {
   const [displayedWords, setDisplayedWords] = useState<string[]>([]);
-  const words = message.split(" ");
 
   useEffect(() => {
+    const words = message.split(" ");
+    
     if (isUser || isTyping || !message) {
       setDisplayedWords(words);
       return;
     }
 
-    setDisplayedWords([]);
-    let currentIndex = 0;
+    // Start with first word immediately
+    setDisplayedWords([words[0]]);
+    let currentIndex = 1;
 
     const displayNextWord = () => {
       if (currentIndex < words.length) {
-        setDisplayedWords((prev) => [...prev, words[currentIndex]]);
-        const currentWord = words[currentIndex];
-        currentIndex++;
+        const prevWord = words[currentIndex - 1];
         
-        // Longer pause after sentence-ending punctuation or comma
+        // Calculate delay based on previous word's punctuation
         let delay = 175; // Base delay between words
-        if (currentWord.endsWith('.') || currentWord.endsWith('!') || currentWord.endsWith('?')) {
+        if (prevWord.endsWith('.') || prevWord.endsWith('!') || prevWord.endsWith('?')) {
           delay = 225; // Pause after sentences
-        } else if (currentWord.endsWith(',')) {
+        } else if (prevWord.endsWith(',')) {
           delay = 200; // Pause after commas
         }
         
-        if (currentIndex < words.length) {
-          setTimeout(displayNextWord, delay);
-        }
+        setTimeout(() => {
+          setDisplayedWords((prev) => [...prev, words[currentIndex]]);
+          currentIndex++;
+          if (currentIndex < words.length) {
+            displayNextWord();
+          }
+        }, delay);
       }
     };
 
-    displayNextWord();
+    if (words.length > 1) {
+      displayNextWord();
+    }
 
     return () => {};
   }, [message, isUser, isTyping]);
