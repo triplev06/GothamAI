@@ -21,16 +21,29 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
     setDisplayedWords([]);
     let currentIndex = 0;
 
-    const interval = setInterval(() => {
+    const displayNextWord = () => {
       if (currentIndex < words.length) {
         setDisplayedWords((prev) => [...prev, words[currentIndex]]);
+        const currentWord = words[currentIndex];
         currentIndex++;
-      } else {
-        clearInterval(interval);
+        
+        // Longer pause after sentence-ending punctuation or comma
+        let delay = 250; // Base delay between words
+        if (currentWord.endsWith('.') || currentWord.endsWith('!') || currentWord.endsWith('?')) {
+          delay = 600; // Longer pause after sentences
+        } else if (currentWord.endsWith(',')) {
+          delay = 450; // Medium pause after commas
+        }
+        
+        if (currentIndex < words.length) {
+          setTimeout(displayNextWord, delay);
+        }
       }
-    }, 150);
+    };
 
-    return () => clearInterval(interval);
+    displayNextWord();
+
+    return () => {};
   }, [message, isUser, isTyping]);
 
   return (
