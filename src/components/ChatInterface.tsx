@@ -15,7 +15,7 @@ interface Message {
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { text: "Good day. I am Alfred, at your service. How may I assist you today?", isUser: false }
+    { text: "Good day, I am Alfred, at your service. How may I assist you today?", isUser: false }
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
