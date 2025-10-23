@@ -1,5 +1,6 @@
 import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface ChatMessageProps {
   message: string;
@@ -8,6 +9,30 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) => {
+  const [displayedWords, setDisplayedWords] = useState<string[]>([]);
+  const words = message.split(" ");
+
+  useEffect(() => {
+    if (isUser || isTyping || !message) {
+      setDisplayedWords(words);
+      return;
+    }
+
+    setDisplayedWords([]);
+    let currentIndex = 0;
+
+    const interval = setInterval(() => {
+      if (currentIndex < words.length) {
+        setDisplayedWords((prev) => [...prev, words[currentIndex]]);
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [message, isUser, isTyping]);
+
   return (
     <div
       className={cn(
@@ -36,7 +61,7 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
             <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"></span>
           </div>
         ) : (
-          <p className="text-sm leading-relaxed">{message}</p>
+          <p className="text-sm leading-relaxed">{displayedWords.join(" ")}</p>
         )}
       </div>
 
