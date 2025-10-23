@@ -19,37 +19,35 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
       return;
     }
 
-    // Start with first word immediately
-    setDisplayedWords([words[0]]);
-    let currentIndex = 1;
-
-    const displayNextWord = () => {
-      if (currentIndex < words.length) {
-        const prevWord = words[currentIndex - 1];
-        
-        // Calculate delay based on previous word's punctuation
-        let delay = 175; // Base delay between words
+    // Start with empty and animate all words
+    setDisplayedWords([]);
+    let timeoutIds: NodeJS.Timeout[] = [];
+    
+    words.forEach((word, index) => {
+      let cumulativeDelay = 0;
+      
+      // Calculate cumulative delay based on all previous words
+      for (let i = 0; i < index; i++) {
+        const prevWord = words[i];
         if (prevWord.endsWith('.') || prevWord.endsWith('!') || prevWord.endsWith('?')) {
-          delay = 225; // Pause after sentences
+          cumulativeDelay += 225;
         } else if (prevWord.endsWith(',')) {
-          delay = 200; // Pause after commas
+          cumulativeDelay += 200;
+        } else {
+          cumulativeDelay += 175;
         }
-        
-        setTimeout(() => {
-          setDisplayedWords((prev) => [...prev, words[currentIndex]]);
-          currentIndex++;
-          if (currentIndex < words.length) {
-            displayNextWord();
-          }
-        }, delay);
       }
+      
+      const timeoutId = setTimeout(() => {
+        setDisplayedWords((prev) => [...prev, word]);
+      }, cumulativeDelay);
+      
+      timeoutIds.push(timeoutId);
+    });
+
+    return () => {
+      timeoutIds.forEach(id => clearTimeout(id));
     };
-
-    if (words.length > 1) {
-      displayNextWord();
-    }
-
-    return () => {};
   }, [message, isUser, isTyping]);
 
   return (
