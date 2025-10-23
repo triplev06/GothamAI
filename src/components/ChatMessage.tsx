@@ -30,9 +30,9 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
       for (let i = 0; i < index; i++) {
         const prevWord = words[i];
         if (prevWord.endsWith('.') || prevWord.endsWith('!') || prevWord.endsWith('?')) {
-          cumulativeDelay += 225;
+          cumulativeDelay += 400;
         } else if (prevWord.endsWith(',')) {
-          cumulativeDelay += 200;
+          cumulativeDelay += 250;
         } else {
           cumulativeDelay += 175;
         }
