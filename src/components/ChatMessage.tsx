@@ -28,11 +28,11 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
         currentIndex++;
         
         // Longer pause after sentence-ending punctuation or comma
-        let delay = 250; // Base delay between words
+        let delay = 175; // Base delay between words
         if (currentWord.endsWith('.') || currentWord.endsWith('!') || currentWord.endsWith('?')) {
-          delay = 600; // Longer pause after sentences
+          delay = 225; // Pause after sentences
         } else if (currentWord.endsWith(',')) {
-          delay = 450; // Medium pause after commas
+          delay = 200; // Pause after commas
         }
         
         if (currentIndex < words.length) {
