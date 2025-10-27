@@ -11,6 +11,7 @@ import alfredPortrait from "@/assets/alfred-portrait.png";
 interface Message {
   text: string;
   isUser: boolean;
+  speakerName?: string;
 }
 
 const ChatInterface = () => {
@@ -85,8 +86,52 @@ const ChatInterface = () => {
     sendMessage(inputText);
   };
 
-  const handleVoiceTranscript = (text: string) => {
-    sendMessage(text);
+  const handleVoiceTranscript = (text: string, speakerName?: string) => {
+    if (!text.trim() || isLoading) return;
+
+    const userMessage = { text: text.trim(), isUser: true, speakerName };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+
+    // Send message to AI (same as sendMessage but without adding message again)
+    supabase.functions.invoke("chat", {
+      body: { message: text.trim() },
+    })
+      .then(({ data, error }) => {
+        if (error) throw error;
+
+        setIsTyping(false);
+
+        if (data?.response) {
+          setMessages((prev) => [...prev, { text: data.response, isUser: false }]);
+        } else {
+          throw new Error("No response from assistant");
+        }
+      })
+      .catch((error: any) => {
+        console.error("Error sending message:", error);
+        setIsTyping(false);
+
+        let errorMessage = "Sorry, I encountered an error. Please try again.";
+
+        if (error.message?.includes("429")) {
+          errorMessage = "I'm receiving too many requests. Please wait a moment and try again.";
+        } else if (error.message?.includes("402")) {
+          errorMessage = "The service requires additional credits. Please contact support.";
+        }
+
+        setMessages((prev) => [...prev, { text: errorMessage, isUser: false }]);
+
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
@@ -129,6 +174,7 @@ const ChatInterface = () => {
                 key={index}
                 message={message.text}
                 isUser={message.isUser}
+                speakerName={message.speakerName}
               />
             ))}
             {isTyping && (

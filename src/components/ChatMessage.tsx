@@ -6,9 +6,10 @@ interface ChatMessageProps {
   message: string;
   isUser: boolean;
   isTyping?: boolean;
+  speakerName?: string;
 }
 
-const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) => {
+const ChatMessage = ({ message, isUser, isTyping = false, speakerName }: ChatMessageProps) => {
   const [displayedWords, setDisplayedWords] = useState<string[]>([]);
 
   useEffect(() => {
@@ -71,6 +72,11 @@ const ChatMessage = ({ message, isUser, isTyping = false }: ChatMessageProps) =>
             : "bg-card text-card-foreground border border-border"
         )}
       >
+        {speakerName && isUser && (
+          <div className="text-xs font-semibold mb-1 opacity-70">
+            {speakerName}
+          </div>
+        )}
         {isTyping ? (
           <div className="flex gap-1">
             <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]"></span>
