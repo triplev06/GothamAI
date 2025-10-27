@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Supabase Connection</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Supabase Connection Test</h1>
+  <button onclick="testConnection()">Test Connection</button>
+  <button onclick="testVoiceProfiles()">Test Voice Profiles Table</button>
+  <button onclick="createTable()">Create Voice Profiles Table</button>
+  <pre id="output"></pre>
+
+  <script>
+    const supabaseUrl = 'https://mfvacdccybqhorngfcxv.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mdmFjZGNjeWJxaG9ybmdmY3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1MTcxNjEsImV4cCI6MjA3NzA5MzE2MX0.I4Xl3StJ75y46RitCXI4NdsYPVXG5A5kzJTF1ozHLHk';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    function log(message) {
+      const output = document.getElementById('output');
+      output.textContent += message + '\n';
+      console.log(message);
+    }
+
+    async function testConnection() {
+      document.getElementById('output').textContent = '';
+      log('Testing Supabase connection...');
+
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          log('❌ Connection error: ' + error.message);
+        } else {
+          log('✅ Connection successful!');
+        }
+      } catch (err) {
+        log('❌ Error: ' + err.message);
+      }
+    }
+
+    async function testVoiceProfiles() {
+      document.getElementById('output').textContent = '';
+      log('Testing voice_profiles table access...');
+
+      try {
+        const { data, error } = await supabase
+          .from('voice_profiles')
+          .select('*')
+          .limit(1);
+
+        if (error) {
+          log('❌ Error accessing table:');
+          log('Message: ' + error.message);
+          log('Code: ' + error.code);
+          log('Details: ' + error.details);
+          log('Hint: ' + error.hint);
+
+          if (error.code === '42P01') {
+            log('\n⚠️  TABLE DOES NOT EXIST! You need to create it first.');
+            log('Click "Create Voice Profiles Table" button above.');
+          } else if (error.code === 'PGRST116') {
+            log('\n⚠️  TABLE EXISTS but RLS is blocking access.');
+          }
+        } else {
+          log('✅ Table exists and is accessible!');
+          log('Current rows: ' + (data ? data.length : 0));
+        }
+      } catch (err) {
+        log('❌ Error: ' + err.message);
+      }
+    }
+
+    async function createTable() {
+      document.getElementById('output').textContent = '';
+      log('Creating voice_profiles table...');
+      log('⚠️  Note: This requires SQL execution which cannot be done from the client.');
+      log('\nPlease follow these steps:');
+      log('1. Go to: https://supabase.com/dashboard/project/mfvacdccybqhorngfcxv/sql');
+      log('2. Click "New query"');
+      log('3. Copy and paste this SQL:');
+      log('');
+      log('CREATE TABLE voice_profiles (');
+      log('  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,');
+      log('  user_name TEXT NOT NULL,');
+      log('  voice_features JSONB NOT NULL,');
+      log('  enrollment_samples INTEGER DEFAULT 0,');
+      log('  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),');
+      log('  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()');
+      log(');');
+      log('');
+      log('CREATE INDEX idx_voice_profiles_user_name ON voice_profiles(user_name);');
+      log('CREATE INDEX idx_voice_profiles_created_at ON voice_profiles(created_at);');
+      log('');
+      log('ALTER TABLE voice_profiles ENABLE ROW LEVEL SECURITY;');
+      log('');
+      log('CREATE POLICY "Allow all operations on voice_profiles" ON voice_profiles');
+      log('  FOR ALL USING (true) WITH CHECK (true);');
+      log('');
+      log('4. Click "RUN"');
+      log('5. Come back here and click "Test Voice Profiles Table"');
+    }
+  </script>
+</body>
+</html>

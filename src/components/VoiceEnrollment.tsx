@@ -136,7 +136,13 @@ const VoiceEnrollment = ({ onComplete, onSkip }: VoiceEnrollmentProps) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error details:", error);
+        console.error("Error message:", error.message);
+        console.error("Error code:", error.code);
+        console.error("Error hint:", error.hint);
+        throw error;
+      }
 
       toast({
         title: "Enrollment Complete!",
@@ -144,11 +150,19 @@ const VoiceEnrollment = ({ onComplete, onSkip }: VoiceEnrollmentProps) => {
       });
 
       onComplete(data.id, userName);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving voice profile:", error);
+      console.error("Full error object:", JSON.stringify(error, null, 2));
+
+      let errorMessage = "Could not save your voice profile. Please try again.";
+
+      if (error?.message) {
+        errorMessage += ` Error: ${error.message}`;
+      }
+
       toast({
         title: "Enrollment Failed",
-        description: "Could not save your voice profile. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
       setStep('recording');
