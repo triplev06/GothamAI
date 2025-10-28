@@ -131,6 +131,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
             variant: "destructive",
           });
           setIsProcessing(false);
+          // Clean up stream on error
+          stream.getTracks().forEach(track => track.stop());
           return;
         }
 
@@ -146,6 +148,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
             variant: "destructive",
           });
           setIsProcessing(false);
+          // Clean up stream on error
+          stream.getTracks().forEach(track => track.stop());
           return;
         }
 

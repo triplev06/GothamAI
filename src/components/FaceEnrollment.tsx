@@ -38,11 +38,12 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
     }
 
     return () => {
+      // Cleanup camera when component unmounts or step changes
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [step]);
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startCamera = async () => {
     try {
@@ -164,9 +165,15 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
         description: `Face profile created successfully for ${userName}!`,
       });
 
-      // Stop camera
+      // Stop camera immediately
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+
+      // Clear video source
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
       }
 
       onComplete(data.id, userName);

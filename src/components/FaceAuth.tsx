@@ -26,11 +26,12 @@ export function FaceAuth({ onSuccess, onCancel }: FaceAuthProps) {
     startCamera();
 
     return () => {
+      // Cleanup camera when component unmounts
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startCamera = async () => {
     try {
@@ -159,9 +160,15 @@ export function FaceAuth({ onSuccess, onCancel }: FaceAuthProps) {
           description: `Welcome, ${bestMatch.name}! (${Math.round(bestMatch.score * 100)}% match)`,
         });
 
-        // Stop camera
+        // Stop camera immediately
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
+          setStream(null);
+        }
+
+        // Clear video source
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
         }
 
         // Call success callback after a brief delay
