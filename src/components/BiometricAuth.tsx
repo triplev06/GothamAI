@@ -315,10 +315,12 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
 
               <TabsContent value="face" className="mt-6">
                 <div className="space-y-4">
-                  <FaceAuth
-                    onSuccess={handleFaceAuthSuccess}
-                    onCancel={undefined}
-                  />
+                  {activeTab === "face" && (
+                    <FaceAuth
+                      onSuccess={handleFaceAuthSuccess}
+                      onCancel={undefined}
+                    />
+                  )}
 
                   <div className="pt-2">
                     <Button
@@ -348,11 +350,15 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
                 </TabsList>
 
                 <TabsContent value="voice" className="mt-6">
-                  <VoiceEnrollment onComplete={handleEnrollmentComplete} />
+                  {activeTab === "voice" && (
+                    <VoiceEnrollment onComplete={handleEnrollmentComplete} />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="face" className="mt-6">
-                  <FaceEnrollment onComplete={handleEnrollmentComplete} />
+                  {activeTab === "face" && (
+                    <FaceEnrollment onComplete={handleEnrollmentComplete} />
+                  )}
                 </TabsContent>
               </Tabs>
 
