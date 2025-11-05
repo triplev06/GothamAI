@@ -1,16 +1,16 @@
-# 🦇 DIGITAL WHISPERER AI 🦇
+# 🦇 AlfredLLM 🦇
 
 > *"It's not who I am underneath, but what I do that defines me."* - Batman
 
 ## THE SIGNAL IN THE NIGHT
 
-When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **Digital Whisperer AI** is your call to action.
+When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **AlfredLLM** is your call to action.
 
 This isn't just another AI chatbot. This is your **personal Alfred** - a sophisticated digital companion that recognizes your voice, remembers your face, and speaks with the wisdom of the World's Greatest Detective.
 
 ## 🦇 WHAT IS THIS ARSENAL?
 
-Digital Whisperer AI is a cutting-edge web application that combines:
+AlfredLLM is a cutting-edge web application that combines:
 
 - 🎭 **Face Recognition Authentication** - Like the Batcave's security system, but for your browser
 - 🎤 **Voice Enrollment & Recognition** - Your voice is your identity, no passwords needed
