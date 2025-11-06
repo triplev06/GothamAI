@@ -1,6 +1,5 @@
 import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
 
 interface ChatMessageProps {
   message: string;
@@ -10,46 +9,6 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message, isUser, isTyping = false, speakerName }: ChatMessageProps) => {
-  const [displayedWords, setDisplayedWords] = useState<string[]>([]);
-
-  useEffect(() => {
-    const words = message.split(" ");
-    
-    if (isUser || isTyping || !message) {
-      setDisplayedWords(words);
-      return;
-    }
-
-    // Start with empty and animate all words
-    setDisplayedWords([]);
-    let timeoutIds: NodeJS.Timeout[] = [];
-    
-    words.forEach((word, index) => {
-      let cumulativeDelay = 0;
-      
-      // Calculate cumulative delay based on all previous words
-      for (let i = 0; i < index; i++) {
-        const prevWord = words[i];
-        if (prevWord.endsWith('.') || prevWord.endsWith('!') || prevWord.endsWith('?')) {
-          cumulativeDelay += 400;
-        } else if (prevWord.endsWith(',')) {
-          cumulativeDelay += 250;
-        } else {
-          cumulativeDelay += 175;
-        }
-      }
-      
-      const timeoutId = setTimeout(() => {
-        setDisplayedWords((prev) => [...prev, word]);
-      }, cumulativeDelay);
-      
-      timeoutIds.push(timeoutId);
-    });
-
-    return () => {
-      timeoutIds.forEach(id => clearTimeout(id));
-    };
-  }, [message, isUser, isTyping]);
 
   return (
     <div
@@ -84,7 +43,7 @@ const ChatMessage = ({ message, isUser, isTyping = false, speakerName }: ChatMes
             <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"></span>
           </div>
         ) : (
-          <p className="text-sm leading-relaxed">{displayedWords.join(" ")}</p>
+          <p className="text-sm leading-relaxed">{message}</p>
         )}
       </div>
 

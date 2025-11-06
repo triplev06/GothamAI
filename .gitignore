@@ -16,6 +16,10 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.claude
+
+# Supabase
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*
