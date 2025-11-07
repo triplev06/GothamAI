@@ -4,23 +4,25 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { extractFaceFeatures, averageFaceFeatures, type FaceFeatures } from "@/utils/faceBiometrics";
+import { extractFaceFeatures, averageFaceFeatures, loadFaceModels, type FaceFeatures } from "@/utils/faceBiometrics";
 import { useToast } from "@/hooks/use-toast";
 
 const REQUIRED_SAMPLES = 3;
 
 interface FaceEnrollmentProps {
-  onComplete: (profileId: string, userName: string) => void;
+  onComplete: (profileId: string, userName?: string) => void;
+  userName?: string; // Optional: if provided, skip name entry
 }
 
-export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
-  const [step, setStep] = useState<"name" | "capture">("name");
-  const [userName, setUserName] = useState("");
+export function FaceEnrollment({ onComplete, userName: providedUserName }: FaceEnrollmentProps) {
+  const [step, setStep] = useState<"name" | "capture">(providedUserName ? "capture" : "name");
+  const [userName, setUserName] = useState(providedUserName || "");
   const [currentSample, setCurrentSample] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedFeatures, setCapturedFeatures] = useState<FaceFeatures[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,8 +34,39 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
     "Tilt your head slightly to the left",
   ];
 
+  // Preload face recognition models
   useEffect(() => {
-    if (step === "capture" && !stream) {
+    if (step === "capture" && !modelsLoaded) {
+      const loadModels = async () => {
+        toast({
+          title: "Loading Face Recognition",
+          description: "Downloading AI models (first time only, ~10MB)...",
+          duration: 5000,
+        });
+
+        try {
+          await loadFaceModels();
+          setModelsLoaded(true);
+          toast({
+            title: "Ready!",
+            description: "Face recognition models loaded successfully.",
+          });
+        } catch (error) {
+          console.error("Error loading models:", error);
+          toast({
+            title: "Model Load Failed",
+            description: "Failed to load face recognition models. Please check your internet and refresh.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      loadModels();
+    }
+  }, [step, modelsLoaded, toast]);
+
+  useEffect(() => {
+    if (step === "capture" && !stream && modelsLoaded) {
       startCamera();
     }
 
@@ -43,7 +76,7 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, modelsLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startCamera = async () => {
     try {
@@ -108,14 +141,21 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
         return;
       }
 
-      // Extract face features
+      // Extract face features with timeout
+      toast({
+        title: "Analyzing Face...",
+        description: "Please hold still",
+        duration: 2000,
+      });
+
       const features = await extractFaceFeatures(blob);
 
       if (!features) {
         toast({
           title: "No Face Detected",
-          description: "Please ensure your face is clearly visible and well-lit.",
+          description: "Please ensure your face is clearly visible, well-lit, and facing the camera directly. Try moving closer to the camera.",
           variant: "destructive",
+          duration: 5000,
         });
         setIsCapturing(false);
         return;
@@ -147,12 +187,20 @@ export function FaceEnrollment({ onComplete }: FaceEnrollmentProps) {
       // Average all face features
       const averagedFeatures = averageFaceFeatures(allFeatures);
 
+      console.log('[FaceEnrollment] Averaged features length:', averagedFeatures.length);
+      console.log('[FaceEnrollment] Averaged features type:', averagedFeatures.constructor.name);
+
+      // Convert Float32Array to regular array for Supabase JSONB storage
+      const featuresArray = Array.from(averagedFeatures);
+
+      console.log('[FaceEnrollment] Features array length:', featuresArray.length);
+
       // Store in Supabase
       const { data, error } = await supabase
         .from("face_profiles")
         .insert({
           user_name: userName,
-          face_features: averagedFeatures,
+          face_features: featuresArray,
           enrollment_samples: REQUIRED_SAMPLES,
         })
         .select()

@@ -57,7 +57,7 @@ const ChatInterface = () => {
       } else {
         throw new Error("No response from assistant");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error sending message:", error);
       setIsTyping(false);
       
@@ -109,7 +109,7 @@ const ChatInterface = () => {
           throw new Error("No response from assistant");
         }
       })
-      .catch((error: any) => {
+      .catch((error) => {
         console.error("Error sending message:", error);
         setIsTyping(false);
 

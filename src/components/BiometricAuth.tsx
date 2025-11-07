@@ -3,30 +3,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaceAuth } from "./FaceAuth";
-import VoiceEnrollment from "./VoiceEnrollment";
-import { FaceEnrollment } from "./FaceEnrollment";
-import { Mic, Camera, UserPlus, CheckCircle2, Circle } from "lucide-react";
+import { PasswordAuth } from "./PasswordAuth";
+import { UnifiedEnrollment } from "./UnifiedEnrollment";
+import { Mic, Camera, UserPlus, CheckCircle2, Circle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { extractVoiceFeatures, compareVoiceFeatures } from "@/utils/voiceBiometrics";
+import { extractVoiceFeatures, compareVoiceFeatures, VoiceFeatures } from "@/utils/voiceBiometrics";
 
 interface BiometricAuthProps {
   onAuthenticated: (userName: string) => void;
 }
 
 interface AuthStatus {
-  voice: { authenticated: boolean; userName: string };
-  face: { authenticated: boolean; userName: string };
+  voice: { authenticated: boolean; userName: string; userProfileId: string };
+  face: { authenticated: boolean; userName: string; userProfileId: string };
+}
+
+interface VoiceProfileWithUser {
+  id: string;
+  user_name: string;
+  voice_features: VoiceFeatures;
+  user_profile_id: string;
+  user_profiles: {
+    user_name: string;
+  };
 }
 
 export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
   const [mode, setMode] = useState<"auth" | "enroll">("auth");
-  const [activeTab, setActiveTab] = useState<"voice" | "face">("voice");
+  const [activeTab, setActiveTab] = useState<"voice" | "face" | "password">("voice");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>({
-    voice: { authenticated: false, userName: "" },
-    face: { authenticated: false, userName: "" },
+    voice: { authenticated: false, userName: "", userProfileId: "" },
+    face: { authenticated: false, userName: "", userProfileId: "" },
   });
 
   const { toast } = useToast();
@@ -34,8 +44,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
   // Check if both authentications are complete
   useEffect(() => {
     if (authStatus.voice.authenticated && authStatus.face.authenticated) {
-      // Verify both authentications are for the same user
-      if (authStatus.voice.userName === authStatus.face.userName) {
+      // Verify both authentications are for the same user profile
+      if (authStatus.voice.userProfileId === authStatus.face.userProfileId) {
         toast({
           title: "Full Authentication Complete",
           description: `Welcome, ${authStatus.voice.userName}! Both biometrics verified.`,
@@ -44,22 +54,22 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       } else {
         toast({
           title: "Authentication Mismatch",
-          description: `Voice identified as "${authStatus.voice.userName}" but face identified as "${authStatus.face.userName}". Please re-authenticate.`,
+          description: `Voice and face belong to different accounts. Voice: "${authStatus.voice.userName}", Face: "${authStatus.face.userName}". Please re-authenticate.`,
           variant: "destructive",
         });
         // Reset authentication
         setAuthStatus({
-          voice: { authenticated: false, userName: "" },
-          face: { authenticated: false, userName: "" },
+          voice: { authenticated: false, userName: "", userProfileId: "" },
+          face: { authenticated: false, userName: "", userProfileId: "" },
         });
       }
     }
   }, [authStatus, onAuthenticated, toast]);
 
-  const handleFaceAuthSuccess = (userName: string, profileId: string) => {
+  const handleFaceAuthSuccess = (userName: string, profileId: string, userProfileId: string) => {
     setAuthStatus((prev) => ({
       ...prev,
-      face: { authenticated: true, userName },
+      face: { authenticated: true, userName, userProfileId },
     }));
 
     toast({
@@ -75,10 +85,10 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }
   };
 
-  const handleVoiceAuthSuccess = (userName: string) => {
+  const handleVoiceAuthSuccess = (userName: string, userProfileId: string) => {
     setAuthStatus((prev) => ({
       ...prev,
-      voice: { authenticated: true, userName },
+      voice: { authenticated: true, userName, userProfileId },
     }));
 
     toast({
@@ -94,12 +104,21 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }
   };
 
-  const handleEnrollmentComplete = (profileId: string, userName: string) => {
+  const handleEnrollmentComplete = (userName: string) => {
     toast({
-      title: "Enrollment Complete",
-      description: `${activeTab === "voice" ? "Voice" : "Face"} profile created for ${userName}!`,
+      title: "Enrollment Complete!",
+      description: `Welcome, ${userName}! You can now sign in.`,
     });
     setMode("auth");
+  };
+
+  const handlePasswordAuthSuccess = (userName: string) => {
+    // Password bypasses biometric requirements
+    toast({
+      title: "Authentication Successful",
+      description: `Welcome back, ${userName}!`,
+    });
+    onAuthenticated(userName);
   };
 
   const authenticateWithVoice = async () => {
@@ -136,10 +155,15 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
           return;
         }
 
-        // Fetch all voice profiles
+        // Fetch all voice profiles with user profile info
         const { data: profiles, error } = await supabase
           .from("voice_profiles")
-          .select("*");
+          .select(`
+            *,
+            user_profiles!inner (
+              user_name
+            )
+          `);
 
         if (error || !profiles || profiles.length === 0) {
           toast({
@@ -154,35 +178,42 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
         }
 
         // Compare with all profiles
-        let bestMatch = { name: "", score: 0 };
+        let bestMatch = { name: "", score: 0, userProfileId: "" };
 
-        for (const profile of profiles) {
+        for (const profile of profiles as unknown as VoiceProfileWithUser[]) {
+          // Skip profiles without proper user_profile linkage
+          if (!profile.user_profile_id || !profile.user_profiles) {
+            console.warn("Skipping voice profile without user_profile linkage:", profile.id);
+            continue;
+          }
+
           const similarity = compareVoiceFeatures(currentFeatures, profile.voice_features);
 
           if (similarity > bestMatch.score) {
             bestMatch = {
-              name: profile.user_name,
+              name: profile.user_profiles.user_name,
               score: similarity,
+              userProfileId: profile.user_profile_id,
             };
           }
         }
 
         setIsProcessing(false);
 
-        // Check if match meets threshold (60%)
-        if (bestMatch.score >= 0.6) {
+        // Check if match meets threshold (75% - increased for better security)
+        if (bestMatch.score >= 0.75) {
           toast({
             title: "Authentication Successful",
             description: `Welcome, ${bestMatch.name}! (${Math.round(bestMatch.score * 100)}% match)`,
           });
 
-          handleVoiceAuthSuccess(bestMatch.name);
+          handleVoiceAuthSuccess(bestMatch.name, bestMatch.userProfileId);
         } else {
           toast({
             title: "Authentication Failed",
             description: `Voice not recognized. ${
               bestMatch.score > 0
-                ? `Best match: ${Math.round(bestMatch.score * 100)}% (minimum 60% required)`
+                ? `Best match: ${Math.round(bestMatch.score * 100)}% (minimum 75% required)`
                 : "No matches found."
             }`,
             variant: "destructive",
@@ -221,11 +252,13 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Voice/Face Sign In</CardTitle>
+          <CardTitle className="text-2xl">Biometric Sign In</CardTitle>
           <CardDescription>
             {mode === "auth"
-              ? "Complete both voice AND face authentication to access the chatbot"
-              : "Enroll a new biometric profile"}
+              ? "Complete both voice AND face authentication, or use your password backup"
+              : mode === "enroll"
+              ? "Enroll a new biometric profile"
+              : "Set up a password backup for your account"}
           </CardDescription>
 
           {/* Authentication Progress Indicators */}
@@ -256,8 +289,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
         </CardHeader>
         <CardContent>
           {mode === "auth" ? (
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "voice" | "face")}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "voice" | "face" | "password")}>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="voice" className="flex items-center gap-2">
                   <Mic className="w-4 h-4" />
                   Voice
@@ -265,6 +298,10 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
                 <TabsTrigger value="face" className="flex items-center gap-2">
                   <Camera className="w-4 h-4" />
                   Face
+                </TabsTrigger>
+                <TabsTrigger value="password" className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Password
                 </TabsTrigger>
               </TabsList>
 
@@ -334,42 +371,18 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
                   </div>
                 </div>
               </TabsContent>
+
+              <TabsContent value="password" className="mt-6">
+                {activeTab === "password" && (
+                  <PasswordAuth onSuccess={handlePasswordAuthSuccess} />
+                )}
+              </TabsContent>
             </Tabs>
           ) : (
-            <div className="space-y-4">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "voice" | "face")}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="voice" className="flex items-center gap-2">
-                    <Mic className="w-4 h-4" />
-                    Voice
-                  </TabsTrigger>
-                  <TabsTrigger value="face" className="flex items-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    Face
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="voice" className="mt-6">
-                  {activeTab === "voice" && (
-                    <VoiceEnrollment onComplete={handleEnrollmentComplete} />
-                  )}
-                </TabsContent>
-
-                <TabsContent value="face" className="mt-6">
-                  {activeTab === "face" && (
-                    <FaceEnrollment onComplete={handleEnrollmentComplete} />
-                  )}
-                </TabsContent>
-              </Tabs>
-
-              <Button
-                onClick={() => setMode("auth")}
-                variant="outline"
-                className="w-full"
-              >
-                Back to Authentication
-              </Button>
-            </div>
+            <UnifiedEnrollment
+              onComplete={handleEnrollmentComplete}
+              onCancel={() => setMode("auth")}
+            />
           )}
         </CardContent>
       </Card>

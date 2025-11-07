@@ -17,7 +17,8 @@ export interface VoiceFeatures {
  * Extract voice features from an audio blob
  */
 export async function extractVoiceFeatures(audioBlob: Blob): Promise<VoiceFeatures> {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const audioContext = new AudioContextClass();
   const arrayBuffer = await audioBlob.arrayBuffer();
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 

@@ -8,16 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractVoiceFeatures, averageVoiceFeatures, VoiceFeatures } from "@/utils/voiceBiometrics";
 
 interface VoiceEnrollmentProps {
-  onComplete: (userId: string, userName: string) => void;
+  onComplete: (userId: string, userName?: string) => void;
   onSkip?: () => void;
+  userName?: string; // Optional: if provided, skip name entry
 }
 
 const REQUIRED_SAMPLES = 3;
 const SAMPLE_DURATION = 3000; // 3 seconds per sample
 
-const VoiceEnrollment = ({ onComplete, onSkip }: VoiceEnrollmentProps) => {
-  const [step, setStep] = useState<'name' | 'recording' | 'processing'>('name');
-  const [userName, setUserName] = useState("");
+const VoiceEnrollment = ({ onComplete, onSkip, userName: providedUserName }: VoiceEnrollmentProps) => {
+  const [step, setStep] = useState<'name' | 'recording' | 'processing'>(providedUserName ? 'recording' : 'name');
+  const [userName, setUserName] = useState(providedUserName || "");
   const [currentSample, setCurrentSample] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [samples, setSamples] = useState<Blob[]>([]);
@@ -150,7 +151,7 @@ const VoiceEnrollment = ({ onComplete, onSkip }: VoiceEnrollmentProps) => {
       });
 
       onComplete(data.id, userName);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving voice profile:", error);
       console.error("Full error object:", JSON.stringify(error, null, 2));
 

@@ -1,291 +1,191 @@
 /**
- * Face Biometrics Utility
- * Extracts facial features from images for biometric authentication
- * Uses browser-native face detection API when available
+ * Face Biometrics Utility using face-api.js
+ * Provides professional-grade face recognition with 128-dimensional face descriptors
  */
 
-export interface FaceFeatures {
-  // Facial landmark distances (normalized)
-  eyeDistance: number;
-  noseToMouthDistance: number;
-  faceWidth: number;
-  faceHeight: number;
-  leftEyeToNose: number;
-  rightEyeToNose: number;
+import * as faceapi from 'face-api.js';
 
-  // Color/texture features (simplified)
-  skinToneAverage: number;
-  textureComplexity: number;
+// Face descriptor is a 128-dimensional array of numbers (much more precise than old method)
+export type FaceFeatures = Float32Array;
 
-  // Histogram features
-  brightnessDistribution: number[];
+let modelsLoaded = false;
+let modelsLoading = false;
+
+/**
+ * Load face-api.js models with timeout
+ * Models are loaded from CDN on first use (~10MB download)
+ */
+export async function loadFaceModels(timeoutMs = 30000): Promise<void> {
+  if (modelsLoaded) return;
+
+  if (modelsLoading) {
+    // Wait for existing load to complete
+    const startWait = Date.now();
+    while (modelsLoading) {
+      if (Date.now() - startWait > timeoutMs) {
+        throw new Error('Timeout waiting for models to load');
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return;
+  }
+
+  modelsLoading = true;
+
+  try {
+    console.log('Loading face recognition models from CDN...');
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+    // Add timeout to model loading
+    const loadPromise = Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Model loading timeout after 30s. Please check your internet connection.')), timeoutMs)
+    );
+
+    await Promise.race([loadPromise, timeoutPromise]);
+
+    modelsLoaded = true;
+    console.log('Face recognition models loaded successfully');
+  } catch (error) {
+    modelsLoading = false; // Reset so it can be retried
+    console.error('Error loading face recognition models:', error);
+    throw new Error('Failed to load face recognition models. Please refresh and try again.');
+  } finally {
+    modelsLoading = false;
+  }
 }
 
 /**
- * Extract facial features from an image
+ * Extract face descriptor (128-dimensional embedding) from an image
+ * This is MUCH more precise than the old brightness/skin tone approach
  */
-export async function extractFaceFeatures(imageBlob: Blob): Promise<FaceFeatures | null> {
+export async function extractFaceFeatures(imageBlob: Blob, timeoutMs = 15000): Promise<FaceFeatures | null> {
   try {
-    const imageBitmap = await createImageBitmap(imageBlob);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    console.log('[FaceAPI] Starting face feature extraction');
 
-    if (!ctx) {
-      throw new Error('Could not get canvas context');
+    // Ensure models are loaded
+    console.log('[FaceAPI] Checking if models are loaded');
+    await loadFaceModels();
+    console.log('[FaceAPI] Models confirmed loaded');
+
+    // Convert blob to image element
+    console.log('[FaceAPI] Converting blob to image');
+    const img = await blobToImage(imageBlob);
+    console.log('[FaceAPI] Image loaded, dimensions:', img.width, 'x', img.height);
+
+    // Detect face and extract descriptor with timeout
+    console.log('[FaceAPI] Starting face detection...');
+    const detectionPromise = faceapi
+      .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({
+        inputSize: 224,
+        scoreThreshold: 0.5
+      }))
+      .withFaceLandmarks()
+      .withFaceDescriptor()
+      .then(result => {
+        console.log('[FaceAPI] Detection completed:', result ? 'Face found' : 'No face found');
+        return result;
+      })
+      .catch(err => {
+        console.error('[FaceAPI] Detection error:', err);
+        return null;
+      });
+
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => {
+        console.warn('[FaceAPI] Face detection timeout after', timeoutMs, 'ms');
+        resolve(null);
+      }, timeoutMs)
+    );
+
+    const detection = await Promise.race([detectionPromise, timeoutPromise]);
+
+    if (!detection) {
+      console.log('[FaceAPI] No face detected in image');
+      return null;
     }
 
-    canvas.width = imageBitmap.width;
-    canvas.height = imageBitmap.height;
-    ctx.drawImage(imageBitmap, 0, 0);
-
-    // Try to use FaceDetector API if available
-    if ('FaceDetector' in window) {
-      const faceDetector = new (window as any).FaceDetector();
-      const faces = await faceDetector.detect(imageBitmap);
-
-      if (faces.length === 0) {
-        throw new Error('No face detected in image');
-      }
-
-      const face = faces[0];
-      const landmarks = face.landmarks;
-
-      // Extract features from detected landmarks
-      return extractFeaturesFromLandmarks(landmarks, ctx, imageBitmap.width, imageBitmap.height);
-    } else {
-      // Fallback to image analysis without face detection
-      return extractFeaturesFromImage(ctx, imageBitmap.width, imageBitmap.height);
-    }
+    console.log('[FaceAPI] Successfully extracted face descriptor');
+    // Return the 128-dimensional face descriptor
+    return detection.descriptor;
   } catch (error) {
-    console.error('Error extracting face features:', error);
+    console.error('[FaceAPI] Error extracting face features:', error);
     return null;
   }
 }
 
 /**
- * Extract features from detected facial landmarks
- */
-function extractFeaturesFromLandmarks(
-  landmarks: any[],
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): FaceFeatures {
-  // Find key landmarks
-  const leftEye = landmarks.find((l: any) => l.type === 'eye' && l.locations[0].x < width / 2);
-  const rightEye = landmarks.find((l: any) => l.type === 'eye' && l.locations[0].x >= width / 2);
-  const nose = landmarks.find((l: any) => l.type === 'nose');
-  const mouth = landmarks.find((l: any) => l.type === 'mouth');
-
-  // Calculate normalized distances
-  const eyeDistance = leftEye && rightEye
-    ? distance(leftEye.locations[0], rightEye.locations[0]) / width
-    : 0.2;
-
-  const noseToMouthDistance = nose && mouth
-    ? distance(nose.locations[0], mouth.locations[0]) / height
-    : 0.15;
-
-  const leftEyeToNose = leftEye && nose
-    ? distance(leftEye.locations[0], nose.locations[0]) / width
-    : 0.12;
-
-  const rightEyeToNose = rightEye && nose
-    ? distance(rightEye.locations[0], nose.locations[0]) / width
-    : 0.12;
-
-  // Extract additional features from image data
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const { skinToneAverage, textureComplexity, brightnessDistribution } = analyzeImageData(imageData);
-
-  return {
-    eyeDistance,
-    noseToMouthDistance,
-    faceWidth: 1.0, // Normalized
-    faceHeight: 1.0, // Normalized
-    leftEyeToNose,
-    rightEyeToNose,
-    skinToneAverage,
-    textureComplexity,
-    brightnessDistribution,
-  };
-}
-
-/**
- * Fallback feature extraction when face detection API is not available
- */
-function extractFeaturesFromImage(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): FaceFeatures {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const { skinToneAverage, textureComplexity, brightnessDistribution } = analyzeImageData(imageData);
-
-  // Use default normalized values for structural features
-  return {
-    eyeDistance: 0.2,
-    noseToMouthDistance: 0.15,
-    faceWidth: 1.0,
-    faceHeight: 1.0,
-    leftEyeToNose: 0.12,
-    rightEyeToNose: 0.12,
-    skinToneAverage,
-    textureComplexity,
-    brightnessDistribution,
-  };
-}
-
-/**
- * Analyze image data for color and texture features
- */
-function analyzeImageData(imageData: ImageData) {
-  const data = imageData.data;
-  let rSum = 0, gSum = 0, bSum = 0;
-  let variance = 0;
-  const brightnessHistogram = new Array(10).fill(0);
-
-  // Calculate averages and histogram
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    rSum += r;
-    gSum += g;
-    bSum += b;
-
-    const brightness = (r + g + b) / 3;
-    const histogramIndex = Math.min(Math.floor(brightness / 25.6), 9);
-    brightnessHistogram[histogramIndex]++;
-  }
-
-  const pixelCount = data.length / 4;
-  const avgR = rSum / pixelCount;
-  const avgG = gSum / pixelCount;
-  const avgB = bSum / pixelCount;
-
-  // Calculate skin tone (simplified)
-  const skinToneAverage = (avgR * 0.5 + avgG * 0.3 + avgB * 0.2) / 255;
-
-  // Calculate texture complexity (variance)
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const diff = r - avgR;
-    variance += diff * diff;
-  }
-  const textureComplexity = Math.sqrt(variance / pixelCount) / 255;
-
-  // Normalize histogram
-  const brightnessDistribution = brightnessHistogram.map(v => v / pixelCount);
-
-  return { skinToneAverage, textureComplexity, brightnessDistribution };
-}
-
-/**
- * Calculate Euclidean distance between two points
- */
-function distance(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
-  return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
-}
-
-/**
- * Compare two face feature sets and return similarity score (0-1)
+ * Compare two face descriptors using Euclidean distance
+ * Returns similarity score (0-1, where 1 is identical)
  */
 export function compareFaceFeatures(features1: FaceFeatures, features2: FaceFeatures): number {
-  // Weight factors for different features
-  const weights = {
-    structural: 0.4, // Eye distance, nose-mouth distance, etc.
-    color: 0.3, // Skin tone
-    texture: 0.1, // Texture complexity
-    histogram: 0.2, // Brightness distribution
-  };
+  // Calculate Euclidean distance between the two descriptors
+  const distance = faceapi.euclideanDistance(features1, features2);
 
-  // Compare structural features
-  const structuralDiff =
-    Math.abs(features1.eyeDistance - features2.eyeDistance) +
-    Math.abs(features1.noseToMouthDistance - features2.noseToMouthDistance) +
-    Math.abs(features1.leftEyeToNose - features2.leftEyeToNose) +
-    Math.abs(features1.rightEyeToNose - features2.rightEyeToNose);
-  const structuralSimilarity = Math.max(0, 1 - structuralDiff);
+  // Convert distance to similarity score (0-1)
+  // Typical matching threshold is 0.6 distance, so we normalize around that
+  // Lower distance = higher similarity
+  const similarity = Math.max(0, 1 - (distance / 0.6));
 
-  // Compare color features
-  const colorSimilarity = 1 - Math.abs(features1.skinToneAverage - features2.skinToneAverage);
-
-  // Compare texture
-  const textureSimilarity = 1 - Math.abs(features1.textureComplexity - features2.textureComplexity);
-
-  // Compare histograms
-  let histogramDiff = 0;
-  for (let i = 0; i < features1.brightnessDistribution.length; i++) {
-    histogramDiff += Math.abs(
-      features1.brightnessDistribution[i] - features2.brightnessDistribution[i]
-    );
-  }
-  const histogramSimilarity = Math.max(0, 1 - histogramDiff / 2);
-
-  // Calculate weighted similarity
-  const totalSimilarity =
-    structuralSimilarity * weights.structural +
-    colorSimilarity * weights.color +
-    textureSimilarity * weights.texture +
-    histogramSimilarity * weights.histogram;
-
-  return totalSimilarity;
+  return similarity;
 }
 
 /**
- * Average multiple face feature sets (for enrollment)
+ * Average multiple face descriptors (for enrollment with multiple samples)
  */
 export function averageFaceFeatures(featuresList: FaceFeatures[]): FaceFeatures {
-  const count = featuresList.length;
+  if (featuresList.length === 0) {
+    throw new Error('Cannot average empty features list');
+  }
 
-  const averaged: FaceFeatures = {
-    eyeDistance: 0,
-    noseToMouthDistance: 0,
-    faceWidth: 0,
-    faceHeight: 0,
-    leftEyeToNose: 0,
-    rightEyeToNose: 0,
-    skinToneAverage: 0,
-    textureComplexity: 0,
-    brightnessDistribution: new Array(10).fill(0),
-  };
+  const descriptorLength = featuresList[0].length;
+  const averaged = new Float32Array(descriptorLength);
 
-  // Sum all features
+  // Sum all descriptors
   for (const features of featuresList) {
-    averaged.eyeDistance += features.eyeDistance;
-    averaged.noseToMouthDistance += features.noseToMouthDistance;
-    averaged.faceWidth += features.faceWidth;
-    averaged.faceHeight += features.faceHeight;
-    averaged.leftEyeToNose += features.leftEyeToNose;
-    averaged.rightEyeToNose += features.rightEyeToNose;
-    averaged.skinToneAverage += features.skinToneAverage;
-    averaged.textureComplexity += features.textureComplexity;
-
-    for (let i = 0; i < 10; i++) {
-      averaged.brightnessDistribution[i] += features.brightnessDistribution[i];
+    for (let i = 0; i < descriptorLength; i++) {
+      averaged[i] += features[i];
     }
   }
 
-  // Divide by count to get averages
-  averaged.eyeDistance /= count;
-  averaged.noseToMouthDistance /= count;
-  averaged.faceWidth /= count;
-  averaged.faceHeight /= count;
-  averaged.leftEyeToNose /= count;
-  averaged.rightEyeToNose /= count;
-  averaged.skinToneAverage /= count;
-  averaged.textureComplexity /= count;
-
-  for (let i = 0; i < 10; i++) {
-    averaged.brightnessDistribution[i] /= count;
+  // Divide by count to get average
+  for (let i = 0; i < descriptorLength; i++) {
+    averaged[i] /= featuresList.length;
   }
 
   return averaged;
 }
 
 /**
- * Similarity threshold for face matching (65% match required)
+ * Similarity threshold for face matching
+ * Using 0.6 which is industry standard for face-api.js
+ * This is MUCH more accurate than the old 0.75 threshold on basic features
  */
-export const FACE_SIMILARITY_THRESHOLD = 0.65;
+export const FACE_SIMILARITY_THRESHOLD = 0.6;
+
+/**
+ * Helper: Convert blob to HTMLImageElement
+ */
+function blobToImage(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image from blob'));
+    };
+
+    img.src = url;
+  });
+}
