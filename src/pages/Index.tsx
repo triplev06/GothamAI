@@ -1,16 +1,28 @@
 import { useState, useEffect } from "react";
 import ChatInterface from "@/components/ChatInterface";
 import { BiometricAuth } from "@/components/BiometricAuth";
+import StartupVideo from "@/components/StartupVideo";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Index = () => {
+  const { theme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<string>("");
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showStartupVideo, setShowStartupVideo] = useState(false);
+  const [videoCompleted, setVideoCompleted] = useState(false);
 
   const handleAuthentication = (userName: string) => {
     setAuthenticatedUser(userName);
     setIsAuthenticated(true);
+    // Show startup video if in Batman, Alfred, or Joker mode (not Council)
+    setShowStartupVideo(theme === 'batman' || theme === 'alfred' || theme === 'joker');
     setShowWelcome(true);
+  };
+
+  const handleVideoComplete = () => {
+    setShowStartupVideo(false);
+    setVideoCompleted(true);
   };
 
   // Auto-hide welcome message on mobile after 3 seconds
@@ -26,10 +38,17 @@ const Index = () => {
     }
   }, [isAuthenticated]);
 
+  // Show authentication screen if not authenticated
   if (!isAuthenticated) {
     return <BiometricAuth onAuthenticated={handleAuthentication} />;
   }
 
+  // Show startup video after authentication
+  if (showStartupVideo) {
+    return <StartupVideo onComplete={handleVideoComplete} theme={theme} />;
+  }
+
+  // Show main app after video completes
   return (
     <div className="relative">
       <ChatInterface />

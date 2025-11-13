@@ -11,14 +11,14 @@ serve(async (req) => {
   }
 
   try {
-    const { message, characterMode = 'batman', image, stream = true } = await req.json();
+    const { message, characterMode = 'batman', image, stream = true, disableTools = false } = await req.json();
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
 
     if (!GROQ_API_KEY) {
       throw new Error("GROQ_API_KEY is not configured");
     }
 
-    console.log("Received message:", message, "Character mode:", characterMode, "Has image:", !!image, "Stream:", stream);
+    console.log("Received message:", message, "Character mode:", characterMode, "Has image:", !!image, "Stream:", stream, "Disable tools:", disableTools);
 
     // Define available tools/functions
     const tools = [
@@ -210,8 +210,8 @@ serve(async (req) => {
         temperature: characterMode === 'batman' ? 0.5 : characterMode === 'alfred' ? 0.7 : 0.9, // Batman focused, Alfred refined, Joker chaotic
         max_tokens: image ? 1024 : (characterMode === 'batman' ? 512 : characterMode === 'alfred' ? 1024 : 800), // More tokens for image analysis
         stream: false, // Disable streaming to support function calling properly
-        tools: !image ? tools : undefined, // Enable tools only for text mode (not images)
-        tool_choice: !image ? "auto" : undefined, // Let AI decide when to use tools
+        tools: (!image && !disableTools) ? tools : undefined, // Enable tools only for text mode (not images) and when not disabled
+        tool_choice: (!image && !disableTools) ? "auto" : undefined, // Let AI decide when to use tools
       }),
     });
 

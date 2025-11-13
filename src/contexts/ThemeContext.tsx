@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type ThemeMode = 'batman' | 'alfred' | 'joker';
+type ThemeMode = 'batman' | 'alfred' | 'joker' | 'council';
 
 interface ThemeContextType {
   theme: ThemeMode;
@@ -22,10 +22,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   const toggleTheme = () => {
-    // Cycle through: batman -> alfred -> joker -> batman
+    // Cycle through: batman -> alfred -> joker -> council -> batman
     setThemeState(prev => {
       if (prev === 'batman') return 'alfred';
       if (prev === 'alfred') return 'joker';
+      if (prev === 'joker') return 'council';
       return 'batman';
     });
   };

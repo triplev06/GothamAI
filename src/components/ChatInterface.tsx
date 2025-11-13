@@ -1,19 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, X, Download } from "lucide-react";
+import { Send, Image as ImageIcon, X, Download, HelpCircle, Volume2, VolumeX, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "./ThemeToggle";
 import ChatMessage from "./ChatMessage";
 import VoiceInput from "./VoiceInput";
+import HelpModal from "./HelpModal";
+import CouncilMode from "./CouncilMode";
+import { initSound, playMessageSound, playSendSound, toggleMute, playEasterEggSound } from "@/utils/soundEffects";
+import { detectEasterEgg, getEasterEggResponse, triggerEasterEggEffect } from "@/utils/easterEggs";
 import batmanHeroImage from "@/assets/BatmanHeroImage.png";
 import gothamBackground from "@/assets/GothamCityBackground.png";
 import alfredPortrait from "@/assets/alfred-portrait.png";
 import alfredBackground from "@/assets/alfredBg.png";
 import jokerPortrait from "@/assets/joker-portrait.png";
 import jokerBackground from "@/assets/joker-background.png";
+import councilImage from "@/assets/AlfredJokerBatman.png";
 import { speak, stopSpeaking, initVoices, type CharacterVoice } from "@/utils/textToSpeech";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -26,6 +31,12 @@ interface Message {
   imageUrl?: string;
 }
 
+interface CouncilResponse {
+  batman: string;
+  alfred: string;
+  joker: string;
+}
+
 const ChatInterface = () => {
   const { theme } = useTheme();
 
@@ -34,8 +45,10 @@ const ChatInterface = () => {
       return "I'm Batman. What do you need?";
     } else if (theme === 'alfred') {
       return "Good day. I am Alfred, at your service. How may I assist you today?";
-    } else {
+    } else if (theme === 'joker') {
       return "Well, well, well... Look who decided to drop by. HAHAHA! What brings you to my little corner of chaos?";
+    } else {
+      return "Welcome to the Gotham Council. Ask your question to receive wisdom from Batman, Alfred, and The Joker.";
     }
   };
 
@@ -48,13 +61,18 @@ const ChatInterface = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const [councilResponse, setCouncilResponse] = useState<CouncilResponse | null>(null);
+  const [isCouncilLoading, setIsCouncilLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Initialize TTS voices on mount
+  // Initialize TTS voices and sound on mount
   useEffect(() => {
     initVoices();
+    initSound();
   }, []);
 
   // Update initial message when theme changes
@@ -62,6 +80,7 @@ const ChatInterface = () => {
     setMessages([{ text: getInitialMessage(), isUser: false }]);
     stopSpeaking(); // Stop any ongoing speech when switching themes
     setSpeakingMessageIndex(null);
+    setCouncilResponse(null); // Clear council responses when switching modes
   }, [theme]);
 
   const scrollToBottom = () => {
@@ -135,6 +154,27 @@ const ChatInterface = () => {
 
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !selectedImage) || isLoading) return;
+
+    // Play send sound effect
+    playSendSound(theme as CharacterVoice);
+
+    // Check for easter eggs
+    const easterEgg = detectEasterEgg(text, theme as CharacterVoice);
+    if (easterEgg) {
+      const eggResponse = getEasterEggResponse(easterEgg);
+      if (eggResponse) {
+        // Trigger visual effect
+        triggerEasterEggEffect(easterEgg.effect);
+        // Play easter egg sound
+        if (easterEgg.effect === 'bat-signal') {
+          playEasterEggSound('bat-signal');
+        } else if (easterEgg.effect === 'chaos') {
+          playEasterEggSound('chaos');
+        } else if (easterEgg.effect === 'teatime') {
+          playEasterEggSound('teatime');
+        }
+      }
+    }
 
     const userMessage = {
       text: text.trim() || (selectedImage ? "Analyze this image" : ""),
@@ -239,6 +279,9 @@ const ChatInterface = () => {
 
         if (!streamedText) {
           throw new Error("No response from assistant");
+        } else {
+          // Play message received sound
+          playMessageSound(theme as CharacterVoice);
         }
       }
     } catch (error) {
@@ -280,9 +323,91 @@ const ChatInterface = () => {
     }
   };
 
+  const askCouncil = async (question: string) => {
+    if (!question.trim() || isCouncilLoading) return;
+
+    setIsCouncilLoading(true);
+    setCouncilResponse(null);
+
+    // Play send sound
+    playSendSound(theme as CharacterVoice);
+
+    const responses: Partial<CouncilResponse> = {};
+
+    try {
+      // Query all three characters in parallel with individual error handling
+      const promises = ['batman', 'alfred', 'joker'].map(async (mode) => {
+        try {
+          console.log(`[Council] Fetching response from ${mode}...`);
+
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({
+              message: question,
+              characterMode: mode,
+              stream: false,
+              disableTools: true, // Disable function calling for council mode to ensure all respond consistently
+            }),
+          });
+
+          console.log(`[Council] ${mode} response status:`, response.status);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`[Council] ${mode} error response:`, errorText);
+            throw new Error(`${mode} failed: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log(`[Council] ${mode} data:`, data);
+
+          if (!data.response && !data.error) {
+            console.error(`[Council] ${mode} returned neither response nor error:`, data);
+            return { mode, response: 'Unable to get response from ' + mode };
+          }
+
+          return { mode, response: data.response || data.error || 'No response' };
+        } catch (error) {
+          console.error(`[Council] Error with ${mode}:`, error);
+          return { mode, response: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` };
+        }
+      });
+
+      const results = await Promise.all(promises);
+      console.log('[Council] All results:', results);
+
+      results.forEach((result) => {
+        responses[result.mode as keyof CouncilResponse] = result.response;
+      });
+
+      setCouncilResponse(responses as CouncilResponse);
+
+      // Play message received sound
+      playMessageSound(theme as CharacterVoice);
+    } catch (error) {
+      console.error('Council error:', error);
+      toast({
+        title: "Council Error",
+        description: `Failed to gather council responses: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCouncilLoading(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(inputText);
+    if (theme === 'council') {
+      askCouncil(inputText);
+      setInputText("");
+    } else {
+      sendMessage(inputText);
+    }
   };
 
   const handleVoiceTranscript = async (text: string, speakerName?: string) => {
@@ -471,19 +596,18 @@ const ChatInterface = () => {
     });
   };
 
-  const heroImage = theme === 'batman' ? batmanHeroImage : theme === 'alfred' ? alfredPortrait : jokerPortrait;
-  const backgroundImage = theme === 'batman' ? gothamBackground : theme === 'alfred' ? alfredBackground :
-  jokerBackground;
-  const characterTitle = theme === 'batman' ? 'THE DARK KNIGHT' : theme === 'alfred' ? 'ALFRED PENNYWORTH' : 'THE JOKER';
-  const characterSubtitle = theme === 'batman' ? "Gotham's Protector" : theme === 'alfred' ? 'Distinguished Butler & Trusted Advisor' : 'Agent of Chaos & Anarchy';
-  const headerTitle = theme === 'batman' ? 'The Dark Knight' : theme === 'alfred' ? 'Alfred Pennyworth' : 'The Joker';
-  const headerSubtitle = theme === 'batman' ? 'I work in the shadows' : theme === 'alfred' ? 'Your trusted assistant, at your service' : "Why so serious? Let's put a smile on that face!";
+  const heroImage = theme === 'batman' ? batmanHeroImage : theme === 'alfred' ? alfredPortrait : theme === 'joker' ? jokerPortrait : councilImage;
+  const backgroundImage = theme === 'batman' ? gothamBackground : theme === 'alfred' ? alfredBackground : theme === 'joker' ? jokerBackground : gothamBackground;
+  const characterTitle = theme === 'batman' ? 'THE DARK KNIGHT' : theme === 'alfred' ? 'ALFRED PENNYWORTH' : theme === 'joker' ? 'THE JOKER' : 'GOTHAM COUNCIL';
+  const characterSubtitle = theme === 'batman' ? "Gotham's Protector" : theme === 'alfred' ? 'Distinguished Butler & Trusted Advisor' : theme === 'joker' ? 'Agent of Chaos & Anarchy' : 'United Wisdom of Three Insane Minds';
+  const headerTitle = theme === 'batman' ? 'The Dark Knight' : theme === 'alfred' ? 'Alfred Pennyworth' : theme === 'joker' ? 'The Joker' : 'Gotham Council';
+  const headerSubtitle = theme === 'batman' ? 'I work in the shadows' : theme === 'alfred' ? 'Your trusted assistant, at your service' : theme === 'joker' ? "Why so serious? Let's put a smile on that face!" : 'Seek wisdom from Batman, Alfred, and The Joker';
 
   return (
     <div className="flex h-screen bg-background">
       {/* Left Side - Character Portrait */}
       <div className={`hidden lg:flex lg:w-2/5 xl:w-1/3 border-r border-border flex-col items-center justify-center p-8 relative overflow-hidden ${
-        theme === 'batman' ? 'gradient-gotham' : theme === 'alfred' ? 'gradient-secondary' : 'gradient-chaos'
+        theme === 'batman' ? 'gradient-gotham' : theme === 'alfred' ? 'gradient-secondary' : theme === 'joker' ? 'gradient-chaos' : 'gradient-gotham'
       }`}>
         <div
           className="absolute inset-0 opacity-10"
@@ -499,7 +623,9 @@ const ChatInterface = () => {
             ? 'bg-[radial-gradient(circle_at_center,_hsl(43_74%_49%_/_0.1)_0%,_transparent_70%)]'
             : theme === 'alfred'
             ? 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.1)_0%,_transparent_70%)]'
-            : 'bg-[radial-gradient(circle_at_center,_hsl(280_60%_60%_/_0.15)_0%,_transparent_70%)]'
+            : theme === 'joker'
+            ? 'bg-[radial-gradient(circle_at_center,_hsl(280_60%_60%_/_0.15)_0%,_transparent_70%)]'
+            : 'bg-[radial-gradient(circle_at_center,_hsl(43_74%_49%_/_0.08)_0%,_hsl(0_0%_75%_/_0.05)_50%,_hsl(280_60%_60%_/_0.08)_100%)]'
         }`}></div>
         <div className={`relative z-10 flex flex-col items-center theme-entrance`}>
           <div className="w-full max-w-md flex items-center justify-center">
@@ -507,20 +633,22 @@ const ChatInterface = () => {
               src={heroImage}
               alt={characterTitle}
               className={`w-full h-auto object-contain drop-shadow-2xl ${
-                theme === 'batman' ? 'bat-signal-pulse' : theme === 'alfred' ? 'elegant-pulse' : 'chaos-pulse'
+                theme === 'batman' ? 'bat-signal-pulse' : theme === 'alfred' ? 'elegant-pulse' : theme === 'joker' ? 'chaos-pulse' : 'bat-signal-pulse'
               }`}
               style={{
                 filter: theme === 'batman'
                   ? 'drop-shadow(0 0 30px rgba(212, 168, 56, 0.4))'
                   : theme === 'alfred'
                   ? 'drop-shadow(0 0 20px rgba(191, 191, 191, 0.3))'
-                  : 'drop-shadow(0 0 30px rgba(179, 102, 204, 0.5))'
+                  : theme === 'joker'
+                  ? 'drop-shadow(0 0 30px rgba(179, 102, 204, 0.5))'
+                  : 'drop-shadow(0 0 25px rgba(212, 168, 56, 0.3)) drop-shadow(0 0 25px rgba(191, 191, 191, 0.2)) drop-shadow(0 0 25px rgba(179, 102, 204, 0.3))'
               }}
             />
           </div>
           <div className="mt-6 text-center">
             <h2 className={`text-3xl font-bold text-primary mb-2 ${
-              theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : 'text-glow-purple'
+              theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : theme === 'joker' ? 'text-glow-purple' : 'text-glow-gold'
             }`}>
               {characterTitle}
             </h2>
@@ -533,14 +661,14 @@ const ChatInterface = () => {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className={`theme-panel px-6 py-4 ${
-          theme === 'batman' ? 'shadow-gotham' : theme === 'alfred' ? 'shadow-elegant' : 'shadow-chaos'
+          theme === 'batman' ? 'shadow-gotham' : theme === 'alfred' ? 'shadow-elegant' : theme === 'joker' ? 'shadow-chaos' : 'shadow-gotham'
         }`}>
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <div>
                 <h1 className={`text-2xl font-bold text-primary ${
-                  theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : 'text-glow-purple'
+                  theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : theme === 'joker' ? 'text-glow-purple' : 'text-glow-gold'
                 }`}>
                   {headerTitle}
                 </h1>
@@ -549,43 +677,97 @@ const ChatInterface = () => {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={exportConversation}
-              variant="outline"
-              size="sm"
-              disabled={messages.length <= 1}
-              className={`${
-                theme === 'batman'
-                  ? 'hover:border-primary hover:glow-gold'
-                  : theme === 'alfred'
-                  ? 'hover:border-primary hover-silver-glow'
-                  : 'hover:border-primary hover-chaos-glow'
-              } transition-all`}
-              title="Export conversation"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => {
+                  const newMuted = toggleMute();
+                  setIsSoundMuted(newMuted);
+                }}
+                variant="outline"
+                size="sm"
+                className={`${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
+                } transition-all`}
+                title={isSoundMuted ? "Unmute sounds" : "Mute sounds"}
+              >
+                {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </Button>
+              <Button
+                onClick={() => setIsHelpModalOpen(true)}
+                variant="outline"
+                size="sm"
+                className={`${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
+                } transition-all`}
+                title="Help - Learn about this mode"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={exportConversation}
+                variant="outline"
+                size="sm"
+                disabled={messages.length <= 1}
+                className={`${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
+                } transition-all`}
+                title="Export conversation"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <div className="max-w-4xl mx-auto">
-            {messages.map((message, index) => (
-              <ChatMessage
-                key={index}
-                message={message.text}
-                isUser={message.isUser}
-                speakerName={message.speakerName}
-                imageUrl={message.imageUrl}
-                onSpeak={() => handleSpeak(index, message.text)}
-                onStopSpeaking={handleStopSpeaking}
-                isSpeaking={speakingMessageIndex === index}
-              />
-            ))}
-            {isTyping && (
-              <ChatMessage message="" isUser={false} isTyping={true} />
+            {theme === 'council' ? (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-primary mb-2">Gotham Council</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Ask your question below to receive perspectives from Batman, Alfred, and The Joker
+                  </p>
+                </div>
+                {councilResponse && (
+                  <CouncilMode response={councilResponse} isLoading={isCouncilLoading} />
+                )}
+                {isCouncilLoading && !councilResponse && (
+                  <CouncilMode response={null} isLoading={true} />
+                )}
+              </>
+            ) : (
+              <>
+                {messages.map((message, index) => (
+                  <ChatMessage
+                    key={index}
+                    message={message.text}
+                    isUser={message.isUser}
+                    speakerName={message.speakerName}
+                    imageUrl={message.imageUrl}
+                    onSpeak={() => handleSpeak(index, message.text)}
+                    onStopSpeaking={handleStopSpeaking}
+                    isSpeaking={speakingMessageIndex === index}
+                  />
+                ))}
+                {isTyping && (
+                  <ChatMessage message="" isUser={false} isTyping={true} />
+                )}
+              </>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -593,7 +775,7 @@ const ChatInterface = () => {
 
         {/* Input Area */}
         <div className={`theme-panel px-6 py-6 ${
-          theme === 'batman' ? 'shadow-gotham-lg' : theme === 'alfred' ? 'shadow-elegant-lg' : 'shadow-chaos-lg'
+          theme === 'batman' ? 'shadow-gotham-lg' : theme === 'alfred' ? 'shadow-elegant-lg' : theme === 'joker' ? 'shadow-chaos-lg' : 'shadow-gotham-lg'
         }`}>
           <div className="max-w-4xl mx-auto space-y-4">
             {/* Image Preview */}
@@ -643,15 +825,15 @@ const ChatInterface = () => {
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={theme === 'batman' ? 'Enter your command...' : theme === 'alfred' ? 'Type your message...' : 'Tell me a joke...'}
-                disabled={isLoading}
+                placeholder={theme === 'council' ? 'Ask the Gotham Council...' : theme === 'batman' ? 'Enter your command...' : theme === 'alfred' ? 'Type your message...' : 'Tell me a joke...'}
+                disabled={isLoading || isCouncilLoading}
                 className={`flex-1 bg-background border-border focus:border-primary transition-all ${
                   theme === 'batman' ? 'hover-gold-glow focus:glow-gold' : theme === 'alfred' ? 'hover-silver-glow' : 'hover-chaos-glow'
                 }`}
               />
               <Button
                 type="submit"
-                disabled={isLoading || (!inputText.trim() && !selectedImage)}
+                disabled={isLoading || isCouncilLoading || (!inputText.trim() && !selectedImage && theme !== 'council')}
                 size="icon"
                 className={`gradient-primary ${
                   theme === 'batman'
@@ -678,6 +860,12 @@ const ChatInterface = () => {
           </div>
         </div>
       </div>
+
+      {/* Help Modal */}
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
     </div>
   );
 };
