@@ -7,9 +7,10 @@ interface ChatMessageProps {
   isUser: boolean;
   isTyping?: boolean;
   speakerName?: string;
+  imageUrl?: string;
 }
 
-const ChatMessage = ({ message, isUser, isTyping = false, speakerName }: ChatMessageProps) => {
+const ChatMessage = ({ message, isUser, isTyping = false, speakerName, imageUrl }: ChatMessageProps) => {
   const { theme } = useTheme();
 
   return (
@@ -41,6 +42,13 @@ const ChatMessage = ({ message, isUser, isTyping = false, speakerName }: ChatMes
           <div className="text-xs font-semibold mb-1 opacity-70 tracking-wider">
             {speakerName}
           </div>
+        )}
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt="Uploaded"
+            className="max-w-full max-h-64 rounded-lg mb-2 border border-primary/20"
+          />
         )}
         {isTyping ? (
           <div className="flex gap-1">

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -17,6 +17,7 @@ interface Message {
   text: string;
   isUser: boolean;
   speakerName?: string;
+  imageUrl?: string;
 }
 
 const ChatInterface = () => {
@@ -36,6 +37,9 @@ const ChatInterface = () => {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -52,20 +56,69 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const userMessage = { text: text.trim(), isUser: true };
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: theme === 'batman' ? "Image exceeds 5MB limit." : "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: theme === 'batman' ? "Only images accepted." : "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    setImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const sendMessage = async (text: string) => {
+    if ((!text.trim() && !selectedImage) || isLoading) return;
+
+    const userMessage = {
+      text: text.trim() || (selectedImage ? "Analyze this image" : ""),
+      isUser: true,
+      imageUrl: selectedImage || undefined
+    };
     setMessages((prev) => [...prev, userMessage]);
     setInputText("");
+
+    const imageToSend = selectedImage;
+    removeSelectedImage(); // Clear image after adding to messages
+
     setIsLoading(true);
     setIsTyping(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("chat", {
         body: {
-          message: text.trim(),
-          characterMode: theme // Pass the theme to determine personality
+          message: text.trim() || "Analyze this image",
+          characterMode: theme, // Pass the theme to determine personality
+          image: imageToSend // Pass the base64 image if present
         },
       });
 
@@ -257,6 +310,7 @@ const ChatInterface = () => {
                 message={message.text}
                 isUser={message.isUser}
                 speakerName={message.speakerName}
+                imageUrl={message.imageUrl}
               />
             ))}
             {isTyping && (
@@ -271,7 +325,48 @@ const ChatInterface = () => {
           theme === 'batman' ? 'shadow-gotham-lg' : 'shadow-elegant-lg'
         }`}>
           <div className="max-w-4xl mx-auto space-y-4">
+            {/* Image Preview */}
+            {selectedImage && (
+              <div className="relative inline-block">
+                <img
+                  src={selectedImage}
+                  alt="Selected"
+                  className="max-h-32 rounded-lg border-2 border-primary/30"
+                />
+                <Button
+                  onClick={removeSelectedImage}
+                  size="icon"
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="flex gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                size="icon"
+                variant="outline"
+                className={`border-border ${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : 'hover:border-primary hover-silver-glow'
+                } transition-all`}
+                title={theme === 'batman' ? 'Upload image for analysis' : 'Upload an image'}
+              >
+                <ImageIcon className="w-4 h-4" />
+              </Button>
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
@@ -283,7 +378,7 @@ const ChatInterface = () => {
               />
               <Button
                 type="submit"
-                disabled={isLoading || !inputText.trim()}
+                disabled={isLoading || (!inputText.trim() && !selectedImage)}
                 size="icon"
                 className={`gradient-primary ${
                   theme === 'batman'
