@@ -253,20 +253,24 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }
   };
 
-  const authTitle = theme === 'batman' ? 'Batcave Security Protocol' : 'Biometric Authentication';
+  const authTitle = theme === 'batman' ? 'Batcave Security Protocol' : theme === 'alfred' ? 'Biometric Authentication' : 'Chaos Clearance Required';
   const authDescription = mode === "auth"
     ? theme === 'batman'
       ? "Complete biometric authentication to access secure systems"
-      : "Complete both voice AND face authentication, or use your password backup"
+      : theme === 'alfred'
+      ? "Complete both voice AND face authentication, or use your password backup"
+      : "Show me your face and voice... if you DARE! HAHAHA!"
     : mode === "enroll"
     ? theme === 'batman'
       ? "Register new authorized personnel"
-      : "Enroll a new biometric profile"
+      : theme === 'alfred'
+      ? "Enroll a new biometric profile"
+      : "Let's make you part of the madness..."
     : "Configure backup security credentials";
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${
-      theme === 'batman' ? 'gradient-secondary' : 'gradient-secondary'
+      theme === 'batman' ? 'gradient-secondary' : theme === 'alfred' ? 'gradient-secondary' : 'gradient-chaos'
     }`}>
       {/* Theme Toggle Button */}
       <div className="absolute top-4 right-4 z-50">
@@ -276,26 +280,28 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       <div className={`absolute inset-0 opacity-20 ${
         theme === 'batman'
           ? 'bg-[radial-gradient(circle_at_center,_hsl(43_74%_49%_/_0.15)_0%,_transparent_70%)]'
-          : 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.15)_0%,_transparent_70%)]'
+          : theme === 'alfred'
+          ? 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.15)_0%,_transparent_70%)]'
+          : 'bg-[radial-gradient(circle_at_center,_hsl(280_60%_60%_/_0.2)_0%,_transparent_70%)]'
       }`}></div>
       <Card className={`w-full max-w-2xl theme-entrance relative z-10 ${
-        theme === 'batman' ? 'shadow-gotham-lg' : 'shadow-elegant-lg'
+        theme === 'batman' ? 'shadow-gotham-lg' : theme === 'alfred' ? 'shadow-elegant-lg' : 'shadow-chaos-lg'
       }`}>
         <CardHeader className={`text-center theme-panel`}>
           <CardTitle className={`text-2xl text-primary ${
-            theme === 'batman' ? 'text-glow-gold' : 'text-glow-silver'
+            theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : 'text-glow-purple'
           }`}>
             {authTitle}
           </CardTitle>
           <CardDescription>{authDescription}</CardDescription>
 
-          {/* Authentication Progress Indicators */}
+          {/* Authentication Progress Indicators - Hidden on mobile */}
           {mode === "auth" && (
-            <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-border">
+            <div className="hidden md:flex justify-center gap-6 mt-4 pt-4 border-t border-border">
               <div className="flex items-center gap-2">
                 {authStatus.voice.authenticated ? (
                   <CheckCircle2 className={`w-5 h-5 text-primary ${
-                    theme === 'batman' ? 'glow-gold' : 'glow-silver'
+                    theme === 'batman' ? 'glow-gold' : theme === 'alfred' ? 'glow-silver' : 'glow-purple'
                   }`} />
                 ) : (
                   <Circle className="w-5 h-5 text-muted-foreground" />
@@ -307,7 +313,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
               <div className="flex items-center gap-2">
                 {authStatus.face.authenticated ? (
                   <CheckCircle2 className={`w-5 h-5 text-primary ${
-                    theme === 'batman' ? 'glow-gold' : 'glow-silver'
+                    theme === 'batman' ? 'glow-gold' : theme === 'alfred' ? 'glow-silver' : 'glow-purple'
                   }`} />
                 ) : (
                   <Circle className="w-5 h-5 text-muted-foreground" />

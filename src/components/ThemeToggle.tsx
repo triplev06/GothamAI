@@ -3,47 +3,73 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import batSymbol from "@/assets/BatSymbol.png";
 import alfredSilhouette from "@/assets/SilhouetteAlfred.png";
+import jokerSmile from "@/assets/jokerSmileIcon.png";
+import { Smile } from "lucide-react";
 
 export const ThemeToggle = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
-    <Button
-      onClick={toggleTheme}
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "rounded-full w-12 h-12 transition-all duration-500 overflow-hidden",
-        theme === "batman"
-          ? "bg-primary/20 hover:bg-primary/30 text-primary border-2 border-primary/50 hover:glow-gold"
-          : "bg-primary/20 hover:bg-primary/30 text-primary border-2 border-primary/50 hover-silver-glow"
-      )}
-      title={theme === "batman" ? "Switch to Alfred Mode" : "Switch to Batman Mode"}
-    >
-      <div className="relative w-full h-full flex items-center justify-center">
-        {/* Batman Icon */}
+    <div className="flex gap-2 p-1 rounded-lg bg-card/50 border border-border">
+      {/* Batman Button */}
+      <Button
+        onClick={() => setTheme('batman')}
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "rounded-lg w-10 h-10 transition-all duration-300",
+          theme === "batman"
+            ? "bg-primary/30 text-primary border-2 border-primary glow-gold"
+            : "bg-transparent hover:bg-primary/10 text-muted-foreground border-2 border-transparent"
+        )}
+        title="Batman Mode"
+      >
         <img
           src={batSymbol}
           alt="Batman"
-          className={cn(
-            "absolute transition-all duration-500 w-7 h-7 object-contain",
-            theme === "batman"
-              ? "opacity-100 rotate-0 scale-100"
-              : "opacity-0 rotate-180 scale-50"
-          )}
+          className="w-6 h-6 object-contain"
         />
-        {/* Alfred Icon */}
+      </Button>
+
+      {/* Alfred Button */}
+      <Button
+        onClick={() => setTheme('alfred')}
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "rounded-lg w-10 h-10 transition-all duration-300",
+          theme === "alfred"
+            ? "bg-primary/30 text-primary border-2 border-primary glow-silver"
+            : "bg-transparent hover:bg-primary/10 text-muted-foreground border-2 border-transparent"
+        )}
+        title="Alfred Mode"
+      >
         <img
           src={alfredSilhouette}
           alt="Alfred"
-          className={cn(
-            "absolute transition-all duration-500 w-7 h-7 object-contain",
-            theme === "alfred"
-              ? "opacity-100 rotate-0 scale-100"
-              : "opacity-0 -rotate-180 scale-50"
-          )}
+          className="w-6 h-6 object-contain"
         />
-      </div>
-    </Button>
+      </Button>
+
+      {/* Joker Button */}
+      <Button
+        onClick={() => setTheme('joker')}
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "rounded-lg w-10 h-10 transition-all duration-300",
+          theme === "joker"
+            ? "bg-primary/30 text-primary border-2 border-primary glow-purple"
+            : "bg-transparent hover:bg-primary/10 text-muted-foreground border-2 border-transparent"
+        )}
+        title="Joker Mode"
+      >
+        <img
+          src={jokerSmile}
+          alt="Joker"
+          className="w-6 h-6 object-contain"
+        />
+      </Button>
+    </div>
   );
 };

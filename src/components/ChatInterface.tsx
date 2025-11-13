@@ -12,6 +12,8 @@ import batmanHeroImage from "@/assets/BatmanHeroImage.png";
 import gothamBackground from "@/assets/GothamCityBackground.png";
 import alfredPortrait from "@/assets/alfred-portrait.png";
 import alfredBackground from "@/assets/alfredBg.png";
+import jokerPortrait from "@/assets/joker-portrait.png";
+import jokerBackground from "@/assets/joker-background.png";
 
 interface Message {
   text: string;
@@ -26,8 +28,10 @@ const ChatInterface = () => {
   const getInitialMessage = () => {
     if (theme === 'batman') {
       return "I'm Batman. What do you need?";
-    } else {
+    } else if (theme === 'alfred') {
       return "Good day. I am Alfred, at your service. How may I assist you today?";
+    } else {
+      return "Well, well, well... Look who decided to drop by. HAHAHA! What brings you to my little corner of chaos?";
     }
   };
 
@@ -139,16 +143,22 @@ const ChatInterface = () => {
 
       let errorMessage = theme === 'batman'
         ? "System malfunction. Try again."
-        : "My apologies, I encountered an error. Please try again.";
+        : theme === 'alfred'
+        ? "My apologies, I encountered an error. Please try again."
+        : "HAHAHA! Well, that didn't go as planned... Try again!";
 
       if (error.message?.includes("429")) {
         errorMessage = theme === 'batman'
           ? "Too many requests. Wait."
-          : "I'm receiving too many requests. Please wait a moment and try again.";
+          : theme === 'alfred'
+          ? "I'm receiving too many requests. Please wait a moment and try again."
+          : "Whoa, slow down there! Even chaos needs a breather...";
       } else if (error.message?.includes("402")) {
         errorMessage = theme === 'batman'
           ? "Service requires additional resources."
-          : "The service requires additional credits. Please contact support.";
+          : theme === 'alfred'
+          ? "The service requires additional credits. Please contact support."
+          : "Looks like we're all out of credits. How... predictable.";
       }
 
       setMessages((prev) => [...prev, { text: errorMessage, isUser: false }]);
@@ -200,16 +210,22 @@ const ChatInterface = () => {
 
         let errorMessage = theme === 'batman'
           ? "System malfunction. Try again."
-          : "My apologies, I encountered an error. Please try again.";
+          : theme === 'alfred'
+          ? "My apologies, I encountered an error. Please try again."
+          : "HAHAHA! Well, that didn't go as planned... Try again!";
 
         if (error.message?.includes("429")) {
           errorMessage = theme === 'batman'
             ? "Too many requests. Wait."
-            : "I'm receiving too many requests. Please wait a moment and try again.";
+            : theme === 'alfred'
+            ? "I'm receiving too many requests. Please wait a moment and try again."
+            : "Whoa, slow down there! Even chaos needs a breather...";
         } else if (error.message?.includes("402")) {
           errorMessage = theme === 'batman'
             ? "Service requires additional resources."
-            : "The service requires additional credits. Please contact support.";
+            : theme === 'alfred'
+            ? "The service requires additional credits. Please contact support."
+            : "Looks like we're all out of credits. How... predictable.";
         }
 
         setMessages((prev) => [...prev, { text: errorMessage, isUser: false }]);
@@ -225,18 +241,19 @@ const ChatInterface = () => {
       });
   };
 
-  const heroImage = theme === 'batman' ? batmanHeroImage : alfredPortrait;
-  const backgroundImage = theme === 'batman' ? gothamBackground : alfredBackground;
-  const characterTitle = theme === 'batman' ? 'THE DARK KNIGHT' : 'ALFRED PENNYWORTH';
-  const characterSubtitle = theme === 'batman' ? "Gotham's Protector" : 'Distinguished Butler & Trusted Advisor';
-  const headerTitle = theme === 'batman' ? 'The Dark Knight' : 'Alfred Pennyworth';
-  const headerSubtitle = theme === 'batman' ? 'I work in the shadows' : 'Your trusted assistant, at your service';
+  const heroImage = theme === 'batman' ? batmanHeroImage : theme === 'alfred' ? alfredPortrait : jokerPortrait;
+  const backgroundImage = theme === 'batman' ? gothamBackground : theme === 'alfred' ? alfredBackground :
+  jokerBackground;
+  const characterTitle = theme === 'batman' ? 'THE DARK KNIGHT' : theme === 'alfred' ? 'ALFRED PENNYWORTH' : 'THE JOKER';
+  const characterSubtitle = theme === 'batman' ? "Gotham's Protector" : theme === 'alfred' ? 'Distinguished Butler & Trusted Advisor' : 'Agent of Chaos & Anarchy';
+  const headerTitle = theme === 'batman' ? 'The Dark Knight' : theme === 'alfred' ? 'Alfred Pennyworth' : 'The Joker';
+  const headerSubtitle = theme === 'batman' ? 'I work in the shadows' : theme === 'alfred' ? 'Your trusted assistant, at your service' : "Why so serious? Let's put a smile on that face!";
 
   return (
     <div className="flex h-screen bg-background">
       {/* Left Side - Character Portrait */}
       <div className={`hidden lg:flex lg:w-2/5 xl:w-1/3 border-r border-border flex-col items-center justify-center p-8 relative overflow-hidden ${
-        theme === 'batman' ? 'gradient-gotham' : 'gradient-secondary'
+        theme === 'batman' ? 'gradient-gotham' : theme === 'alfred' ? 'gradient-secondary' : 'gradient-chaos'
       }`}>
         <div
           className="absolute inset-0 opacity-10"
@@ -250,7 +267,9 @@ const ChatInterface = () => {
         <div className={`absolute inset-0 opacity-10 ${
           theme === 'batman'
             ? 'bg-[radial-gradient(circle_at_center,_hsl(43_74%_49%_/_0.1)_0%,_transparent_70%)]'
-            : 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.1)_0%,_transparent_70%)]'
+            : theme === 'alfred'
+            ? 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.1)_0%,_transparent_70%)]'
+            : 'bg-[radial-gradient(circle_at_center,_hsl(280_60%_60%_/_0.15)_0%,_transparent_70%)]'
         }`}></div>
         <div className={`relative z-10 flex flex-col items-center theme-entrance`}>
           <div className="w-full max-w-md flex items-center justify-center">
@@ -258,18 +277,20 @@ const ChatInterface = () => {
               src={heroImage}
               alt={characterTitle}
               className={`w-full h-auto object-contain drop-shadow-2xl ${
-                theme === 'batman' ? 'bat-signal-pulse' : 'elegant-pulse'
+                theme === 'batman' ? 'bat-signal-pulse' : theme === 'alfred' ? 'elegant-pulse' : 'chaos-pulse'
               }`}
               style={{
                 filter: theme === 'batman'
                   ? 'drop-shadow(0 0 30px rgba(212, 168, 56, 0.4))'
-                  : 'drop-shadow(0 0 20px rgba(191, 191, 191, 0.3))'
+                  : theme === 'alfred'
+                  ? 'drop-shadow(0 0 20px rgba(191, 191, 191, 0.3))'
+                  : 'drop-shadow(0 0 30px rgba(179, 102, 204, 0.5))'
               }}
             />
           </div>
           <div className="mt-6 text-center">
             <h2 className={`text-3xl font-bold text-primary mb-2 ${
-              theme === 'batman' ? 'text-glow-gold' : 'text-glow-silver'
+              theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : 'text-glow-purple'
             }`}>
               {characterTitle}
             </h2>
@@ -282,14 +303,14 @@ const ChatInterface = () => {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className={`theme-panel px-6 py-4 ${
-          theme === 'batman' ? 'shadow-gotham' : 'shadow-elegant'
+          theme === 'batman' ? 'shadow-gotham' : theme === 'alfred' ? 'shadow-elegant' : 'shadow-chaos'
         }`}>
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <div>
                 <h1 className={`text-2xl font-bold text-primary ${
-                  theme === 'batman' ? 'text-glow-gold' : 'text-glow-silver'
+                  theme === 'batman' ? 'text-glow-gold' : theme === 'alfred' ? 'text-glow-silver' : 'text-glow-purple'
                 }`}>
                   {headerTitle}
                 </h1>
@@ -322,7 +343,7 @@ const ChatInterface = () => {
 
         {/* Input Area */}
         <div className={`theme-panel px-6 py-6 ${
-          theme === 'batman' ? 'shadow-gotham-lg' : 'shadow-elegant-lg'
+          theme === 'batman' ? 'shadow-gotham-lg' : theme === 'alfred' ? 'shadow-elegant-lg' : 'shadow-chaos-lg'
         }`}>
           <div className="max-w-4xl mx-auto space-y-4">
             {/* Image Preview */}
@@ -361,19 +382,21 @@ const ChatInterface = () => {
                 className={`border-border ${
                   theme === 'batman'
                     ? 'hover:border-primary hover:glow-gold'
-                    : 'hover:border-primary hover-silver-glow'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
                 } transition-all`}
-                title={theme === 'batman' ? 'Upload image for analysis' : 'Upload an image'}
+                title={theme === 'batman' ? 'Upload image for analysis' : theme === 'alfred' ? 'Upload an image' : 'Upload something... interesting'}
               >
                 <ImageIcon className="w-4 h-4" />
               </Button>
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={theme === 'batman' ? 'Enter your command...' : 'Type your message...'}
+                placeholder={theme === 'batman' ? 'Enter your command...' : theme === 'alfred' ? 'Type your message...' : 'Tell me a joke...'}
                 disabled={isLoading}
                 className={`flex-1 bg-background border-border focus:border-primary transition-all ${
-                  theme === 'batman' ? 'hover-gold-glow focus:glow-gold' : 'hover-silver-glow'
+                  theme === 'batman' ? 'hover-gold-glow focus:glow-gold' : theme === 'alfred' ? 'hover-silver-glow' : 'hover-chaos-glow'
                 }`}
               />
               <Button
@@ -383,7 +406,9 @@ const ChatInterface = () => {
                 className={`gradient-primary ${
                   theme === 'batman'
                     ? 'hover:glow-gold-intense shadow-gotham text-background'
-                    : 'hover:glow-silver-intense shadow-elegant text-primary-foreground'
+                    : theme === 'alfred'
+                    ? 'hover:glow-silver-intense shadow-elegant text-primary-foreground'
+                    : 'hover:glow-purple-intense shadow-chaos text-primary-foreground'
                 } transition-all duration-300 font-bold`}
               >
                 <Send className="w-4 h-4" />
