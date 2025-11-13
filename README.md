@@ -1,10 +1,10 @@
-# 🦇 Digital Whisperer AI 🦇
+# 🦇 Gotham AI 🦇
 
 > *"It's not who I am underneath, but what I do that defines me."* - Batman
 
 ## THE SIGNAL IN THE NIGHT
 
-When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **Digital Whisperer AI** answers the call.
+When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **Gotham AI** answers the call.
 
 This isn't just another AI chatbot. This is a **multi-modal AI experience** featuring three distinct personalities - Batman, Alfred, and The Joker - each with unique voice profiles, analysis styles, and character-authentic responses.
 
@@ -232,7 +232,7 @@ Schema is auto-created on first authentication attempt.
 ## 🎬 DEMO SCRIPT (5 MINUTES)
 
 **[0:00 - 0:30] Introduction**
-*"Digital Whisperer AI is a multi-modal AI assistant featuring three distinct personalities from the Batman universe, each with unique voices, visual themes, and analysis styles."*
+*"Gotham AI is a multi-modal AI assistant featuring three distinct personalities from the Batman universe, each with unique voices, visual themes, and analysis styles."*
 
 **[0:30 - 1:00] Biometric Auth**
 - Demonstrate face + voice authentication
