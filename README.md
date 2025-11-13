@@ -1,81 +1,300 @@
-# 🦇 AlfredLLM 🦇
+# 🦇 Digital Whisperer AI 🦇
 
 > *"It's not who I am underneath, but what I do that defines me."* - Batman
 
 ## THE SIGNAL IN THE NIGHT
 
-When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **AlfredLLM** is your call to action.
+When Gotham needs a hero, the Bat-Signal lights up the sky. When YOU need an AI assistant that truly understands you, **Digital Whisperer AI** answers the call.
 
-This isn't just another AI chatbot. This is your **personal Alfred** - a sophisticated digital companion that recognizes your voice, remembers your face, and speaks with the wisdom of the World's Greatest Detective.
+This isn't just another AI chatbot. This is a **multi-modal AI experience** featuring three distinct personalities - Batman, Alfred, and The Joker - each with unique voice profiles, analysis styles, and character-authentic responses.
 
-## 🦇 WHAT IS THIS ARSENAL?
+## 🎭 THREE PERSONALITIES, ONE POWERFUL SYSTEM
 
-AlfredLLM is a cutting-edge web application that combines:
+### 🦇 Batman - The Dark Knight
+- **Voice**: Deep (pitch 0.5), slow, commanding
+- **Personality**: Direct, tactical, no-nonsense
+- **Image Analysis**: Security-focused threat assessment
+- **Use Case**: When you need strategic, mission-critical responses
 
-- 🎭 **Face Recognition Authentication** - Like the Batcave's security system, but for your browser
-- 🎤 **Voice Enrollment & Recognition** - Your voice is your identity, no passwords needed
-- 🗣️ **Text-to-Speech Integration** - The AI speaks back to you with clarity
-- 🤖 **Groq LLM Integration** - Lightning-fast AI responses powered by advanced language models
-- 🌙 **Sleek Dark Interface** - Because heroes work best in the shadows
+### 🎩 Alfred - Distinguished Butler
+- **Voice**: British accent, refined, measured
+- **Personality**: Sophisticated, eloquent, wise
+- **Image Analysis**: Artistic appreciation and cultural insight
+- **Use Case**: When you need elegant advice and refined analysis
 
-## 💪 THE HERO'S TOOLKIT
+### 🃏 The Joker - Agent of Chaos
+- **Voice**: High-pitched (pitch 1.5), fast, manic
+- **Personality**: Chaotic, sarcastic, darkly humorous
+- **Image Analysis**: Finds absurdity and irony in everything
+- **Use Case**: When you need unconventional perspectives
 
-Built with the finest technology Wayne Enterprises could buy:
+## 🚀 GROUNDBREAKING FEATURES
 
-- **React** - The framework that never sleeps
-- **TypeScript** - Type-safe code, because preparation is everything
-- **Vite** - Faster than the Batmobile
-- **Supabase** - Your secure fortress of data
-- **Tailwind CSS** - Styled with the precision of a utility belt
-- **shadcn-ui** - Components as reliable as the Bat-Signal
+### 🎙️ **Multi-Modal AI Integration**
+- **Voice Input**: Biometric voice recognition with speaker identification
+- **Voice Output**: Character-specific Text-to-Speech (Batman sounds deep and menacing, Joker sounds manic)
+- **Vision AI**: Image analysis using Llama 4 Scout vision model
+- **Text Chat**: Natural language conversations with persistent context
 
-## 🚀 DEPLOY YOUR OWN BAT-SIGNAL
+### 🧠 **Advanced AI Capabilities**
+
+#### 🛠️ Function Calling / Tool Use
+The AI can actually USE TOOLS to get real information:
+- **Calculator**: "What's 15% of 47?" → AI performs calculation
+- **Weather**: "What's the weather in Gotham?" → AI checks weather
+- **Time/Date**: "What time is it?" → AI gets current time
+
+#### 🖼️ **Vision Analysis**
+Upload images and each character analyzes them differently:
+- **Batman**: Identifies security threats, entry points, vulnerabilities
+- **Alfred**: Provides artistic critique, historical context, aesthetic analysis
+- **Joker**: Finds chaos, humor, and absurdity in the scene
+
+### 🔐 **Biometric Security**
+- **Face Recognition**: Camera-based facial authentication
+- **Voice Authentication**: Unique voiceprint enrollment and verification
+- **Dual-Factor**: Requires BOTH voice AND face to access the system
+- **Password Fallback**: Traditional authentication option
+
+### 🎨 **Dynamic Theme System**
+Three distinct visual themes that adapt to each character:
+- **Batman**: Gold accents, dark Gotham aesthetics
+- **Alfred**: Silver accents, elegant refinement
+- **Joker**: Purple/green chaos with animated effects
+
+## 💪 THE TECH STACK
+
+Built with cutting-edge, production-grade technology:
+
+### Frontend
+- **React 18** + **TypeScript** - Type-safe, modern UI framework
+- **Vite** - Lightning-fast build tool and dev server
+- **Tailwind CSS** - Utility-first styling with custom theme system
+- **shadcn/ui** - High-quality, accessible component library
+
+### Backend & AI
+- **Supabase** - PostgreSQL database + Edge Functions
+- **Groq API** - Ultra-fast AI inference (400+ tokens/second)
+- **Llama 4 Scout** - State-of-the-art vision model for image analysis
+- **Llama 3.3 70B** - Advanced language model for conversations
+- **Web Speech API** - Browser-native TTS and voice recognition
+
+### Security & Auth
+- **Face-api.js** - Browser-based facial recognition
+- **Custom Voice Biometrics** - MFCC-based voice authentication
+- **Supabase Auth** - Password-based fallback authentication
+
+## 🚀 SETUP & DEPLOYMENT
 
 ### Prerequisites
 
-- Node.js & npm installed ([use nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
-- A Supabase account (your personal Batcave database)
-- A Groq API key (your AI superpower)
+- **Node.js 18+** & npm ([install via nvm](https://github.com/nvm-sh/nvm))
+- **Supabase Account** ([create free account](https://supabase.com))
+- **Groq API Key** ([get free key](https://console.groq.com))
 
-### Installation
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone <YOUR_GIT_URL>
-
-# Enter the Batcave
 cd digital-whisperer-ai
 
-# Arm the systems
+# Install dependencies
 npm install
 
-# Configure your secret identity
+# Configure environment variables
 cp .env.example .env
-# Edit .env with your Supabase and Groq credentials
+# Edit .env with your credentials:
+# - VITE_SUPABASE_URL=your_supabase_url
+# - VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
+# - GROQ_API_KEY=your_groq_key (in Supabase Edge Function secrets)
 
-# Launch into the night
+# Run locally
 npm run dev
 ```
 
-## 🎯 FEATURES THAT MAKE THE DIFFERENCE
+### Deploy Edge Function
 
-### 🎭 Face Recognition
-Enroll your face just once, and the system will know you forever. Like Batman's cowl recognizes Bruce Wayne, this app recognizes YOU.
+```bash
+# Install Supabase CLI
+npm install -g supabase
 
-### 🎤 Voice Authentication
-Speak your name, and the AI learns your unique voice signature. No two voices are alike - just like no two heroes are alike.
+# Deploy chat function
+supabase functions deploy chat --project-ref your-project-ref
 
-### 💬 Intelligent Conversations
-Powered by Groq's blazing-fast LLM API, get responses faster than Batman's reflexes. Ask anything, and the Digital Whisperer responds with wisdom.
+# Set Groq API key secret
+supabase secrets set GROQ_API_KEY=your_groq_api_key
+```
 
-### 🔒 Secure by Design
-Your biometric data stays protected in Supabase. We guard your identity like Batman guards Gotham.
+### Database Setup
+
+The app uses Supabase PostgreSQL for:
+- User profiles (`user_profiles`)
+- Voice biometrics (`voice_profiles`)
+- Face recognition data (`face_profiles`)
+
+Schema is auto-created on first authentication attempt.
+
+---
+
+## 📊 API USAGE & COSTS
+
+**All features use FREE tiers:**
+
+| Service | Free Tier | Usage |
+|---------|-----------|-------|
+| Groq API | 500k tokens/day | Text & image AI |
+| Supabase | 500MB database, 2GB storage | User data & auth |
+| Web Speech API | Unlimited | Voice recognition & TTS |
+| Llama 4 Scout | Free via Groq | Image analysis |
+| Llama 3.3 70B | Free via Groq | Conversations |
+
+**Estimated costs for 1000 users/month: $0** 🎉
+
+## 🎯 HOW TO DEMO FOR JUDGES
+
+### **1. Biometric Authentication (30 seconds)**
+*"First, I'll demonstrate our dual-factor biometric authentication..."*
+- Show face + voice authentication
+- Explain it requires BOTH to access
+- Mention data is encrypted in Supabase
+
+### **2. Character Switching (15 seconds)**
+*"The app features three distinct AI personalities..."*
+- Toggle between Batman, Alfred, and Joker
+- Point out visual theme changes (colors, animations)
+- Highlight the 3-button selector
+
+### **3. Text-to-Speech (45 seconds)**
+*"Each character has a unique voice profile..."*
+- Send a message to Batman → Click speaker button
+  - *"Notice the deep (0.5 pitch), slow voice"*
+- Switch to Joker → Send same message → Click speaker
+  - *"Now it's high-pitched (1.5) and fast - completely different!"*
+- Switch to Alfred → Click speaker
+  - *"British accent, refined and measured"*
+
+### **4. Function Calling / Tool Use (60 seconds)**
+*"The AI can use tools to get real information..."*
+- Ask Batman: *"What's 15% of 47?"*
+  - Show it uses the calculator tool
+- Ask Alfred: *"What time is it?"*
+  - Show it uses the time tool
+- Ask Joker: *"What's the weather in Gotham?"*
+  - Show it uses the weather tool (simulated)
+
+### **5. Image Analysis (60 seconds)**
+*"The AI can analyze images with character-specific perspectives..."*
+- Upload an image to Batman
+  - *"See how he identifies security vulnerabilities, entry points"*
+- Upload same image to Alfred
+  - *"Alfred provides artistic analysis and cultural context"*
+- Upload to Joker
+  - *"Joker finds chaos and humor in everything"*
+
+### **6. Voice Input (30 seconds)**
+*"You can also interact via voice..."*
+- Click microphone button
+- Speak a question
+- Show voice recognition + AI response + TTS
+
+---
+
+## 🏆 WHAT MAKES THIS IMPRESSIVE
+
+### **Technical Sophistication**
+✅ Multi-modal AI (Text + Voice + Vision)
+✅ Real-time streaming responses (Groq's 400+ tokens/sec)
+✅ Function calling / tool augmentation
+✅ Biometric authentication (face + voice)
+✅ Character-specific TTS with pitch/rate tuning
+
+### **AI Engineering Excellence**
+✅ Vision model integration (Llama 4 Scout - latest 2025 model)
+✅ Context-aware prompts (different for text vs images)
+✅ Tool/function calling with multi-step reasoning
+✅ Character personality consistency across modalities
+
+### **User Experience**
+✅ 3 distinct visual themes with smooth transitions
+✅ Mobile-responsive design
+✅ Real-time voice recognition with speaker ID
+✅ Accessible UI with keyboard navigation
+
+### **100% Free Resources**
+✅ Groq API - Free tier (500k tokens/day)
+✅ Web Speech API - Built into browsers
+✅ Supabase - Free tier PostgreSQL + Edge Functions
+✅ All models and APIs are free for development
+
+---
+
+## 🎬 DEMO SCRIPT (5 MINUTES)
+
+**[0:00 - 0:30] Introduction**
+*"Digital Whisperer AI is a multi-modal AI assistant featuring three distinct personalities from the Batman universe, each with unique voices, visual themes, and analysis styles."*
+
+**[0:30 - 1:00] Biometric Auth**
+- Demonstrate face + voice authentication
+- Explain dual-factor security
+
+**[1:00 - 2:00] Character Modes & TTS**
+- Show all 3 characters
+- Demonstrate voice differences with speaker button
+- Highlight visual theme transitions
+
+**[2:00 - 3:00] Function Calling**
+- Demo calculator tool
+- Demo time/date tool
+- Demo weather tool
+- Explain how AI decides when to use tools
+
+**[3:00 - 4:00] Vision Analysis**
+- Upload image to Batman (security analysis)
+- Upload same image to Alfred (artistic critique)
+- Show how prompts adapt to images
+
+**[4:00 - 4:45] Voice Interaction**
+- Use voice input
+- Show complete loop: Voice → AI → TTS response
+
+**[4:45 - 5:00] Closing**
+*"All of this runs on 100% free APIs and demonstrates advanced AI engineering - function calling, vision models, biometrics, and character-specific personalities."*
+
+## 💡 KEY INNOVATIONS
+
+### **1. Character-Aware Multi-Modal AI**
+First AI assistant where personality extends across ALL modalities:
+- Text responses match character voice
+- TTS pitch/rate reflects personality
+- Image analysis style differs by character
+- Visual themes adapt to persona
+
+### **2. Tool-Augmented Character Responses**
+AI maintains character even when using tools:
+- Batman: *"Calculation complete. Result: 7.05"*
+- Alfred: *"The calculation yields 7.05, sir."*
+- Joker: *"HAHAHA! Math time! The answer is 7.05!"*
+
+### **3. Biometric Multi-Factor Authentication**
+Combining face + voice recognition in browser:
+- No server-side image processing (privacy-first)
+- MFCC-based voice feature extraction
+- Face embeddings stored encrypted
+
+### **4. Vision Model Prompting**
+Custom prompts for each character's image analysis style:
+- Batman: Security-focused, tactical assessment
+- Alfred: Artistic appreciation, cultural context
+- Joker: Finds absurdity and chaos
+
+---
 
 ## 🌃 THE MISSION
 
-This project was born from a simple truth: **AI should adapt to humans, not the other way around.**
+This project demonstrates that **AI should adapt to humans, not the other way around.**
 
-Just as Batman uses technology to enhance his abilities, Digital Whisperer AI enhances YOUR ability to interact with artificial intelligence through natural means - your face, your voice, your words.
+By combining biometric authentication, multi-modal interaction, and distinct AI personalities, we create an experience that feels natural, engaging, and genuinely helpful - whether you need Batman's tactical advice, Alfred's refined wisdom, or Joker's chaotic perspective.
 
 ## 🦇 CONTRIBUTING
 
@@ -91,12 +310,106 @@ Gotham wasn't protected by one hero alone. If you want to join the mission:
 
 This project is open source because true heroes share their knowledge to make the world a better place.
 
-## 🌟 ACKNOWLEDGMENTS
+## 🏗️ ARCHITECTURE
 
-*"A hero can be anyone. Even a man doing something as simple and reassuring as putting code on GitHub to let a young developer know that the world hadn't ended."*
+```
+┌─────────────────────────────────────────────────────┐
+│                   Frontend (React)                   │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────────┐ │
+│  │ Face Rec │  │  Voice   │  │  Chat Interface   │ │
+│  │ (Camera) │  │  Input   │  │  (Text/Images)    │ │
+│  └──────────┘  └──────────┘  └───────────────────┘ │
+│         │            │                │              │
+│         └────────────┴────────────────┘              │
+│                      │                                │
+└──────────────────────┼────────────────────────────────┘
+                       │
+                       ▼
+        ┌──────────────────────────────┐
+        │   Supabase Edge Function     │
+        │  (Function Calling Logic)    │
+        └──────────────────────────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         ▼                           ▼
+┌─────────────────┐         ┌──────────────────┐
+│  Groq API       │         │  Tool Execution  │
+│  - Llama 4      │         │  - Calculator    │
+│  - Llama 3.3    │         │  - Weather       │
+│  - Vision Model │         │  - Time/Date     │
+└─────────────────┘         └──────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│     AI Response Generated       │
+│   (Character-Specific Format)   │
+└─────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│  Frontend Renders Response      │
+│  + TTS Speaks (Character Voice) │
+└─────────────────────────────────┘
+```
 
 ---
 
-**Remember**: The night is darkest just before the dawn. And the dawn of AI-human interaction is here.
+## 📝 CODE HIGHLIGHTS
 
-**Now go forth and whisper to the digital darkness.** 🦇
+### Character-Specific Prompts
+```typescript
+const systemPrompts = {
+  batman: "You are Batman, the Dark Knight. Direct, terse, commanding...",
+  alfred: "You are Alfred Pennyworth. Refined, articulate, proper...",
+  joker: "You are The Joker. Unpredictable, sarcastic, chaotic..."
+};
+```
+
+### TTS Voice Configurations
+```typescript
+const voiceConfigs = {
+  batman: { rate: 0.75, pitch: 0.5 },  // Deep, slow
+  alfred: { rate: 0.88, pitch: 0.9 },  // Refined
+  joker: { rate: 1.3, pitch: 1.5 }     // Fast, high
+};
+```
+
+### Function Calling Tools
+```typescript
+const tools = [
+  { name: "calculate", description: "Perform math" },
+  { name: "get_weather", description: "Get weather" },
+  { name: "get_current_time", description: "Get time/date" }
+];
+```
+
+---
+
+## 🎓 LEARNING RESOURCES
+
+Built this as a learning project? Check out these resources:
+
+- [Groq API Documentation](https://console.groq.com/docs)
+- [Llama 4 Vision Models](https://groq.com/blog/llama-4)
+- [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
+- [Function Calling Guide](https://console.groq.com/docs/tool-use)
+
+---
+
+## 🌟 ACKNOWLEDGMENTS
+
+**Technologies:**
+- Meta AI for Llama models
+- Groq for blazing-fast inference
+- Supabase for backend infrastructure
+- The open-source community
+
+**Inspiration:**
+*"A hero can be anyone. Even someone building AI to make the world more accessible."*
+
+---
+
+**Remember**: The night is darkest just before the dawn. And the dawn of truly interactive, multi-modal AI is here.
+
+**Now go forth and whisper to the digital darkness.** 🦇🎩🃏

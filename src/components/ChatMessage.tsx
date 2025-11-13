@@ -1,6 +1,7 @@
-import { Bot, User } from "lucide-react";
+import { Bot, User, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   message: string;
@@ -8,9 +9,12 @@ interface ChatMessageProps {
   isTyping?: boolean;
   speakerName?: string;
   imageUrl?: string;
+  onSpeak?: () => void;
+  onStopSpeaking?: () => void;
+  isSpeaking?: boolean;
 }
 
-const ChatMessage = ({ message, isUser, isTyping = false, speakerName, imageUrl }: ChatMessageProps) => {
+const ChatMessage = ({ message, isUser, isTyping = false, speakerName, imageUrl, onSpeak, onStopSpeaking, isSpeaking = false }: ChatMessageProps) => {
   const { theme } = useTheme();
 
   return (
@@ -28,16 +32,19 @@ const ChatMessage = ({ message, isUser, isTyping = false, speakerName, imageUrl 
         </div>
       )}
 
-      <div
-        className={cn(
-          "max-w-[70%] rounded-2xl px-4 py-3",
-          isUser
-            ? theme === 'batman'
-              ? "bg-accent glow-orange text-accent-foreground shadow-gotham"
-              : "bg-accent text-accent-foreground shadow-elegant"
-            : "theme-panel text-card-foreground"
-        )}
-      >
+      <div className="flex flex-col gap-1 max-w-[70%]">
+        <div
+          className={cn(
+            "rounded-2xl px-4 py-3",
+            isUser
+              ? theme === 'batman'
+                ? "bg-accent glow-orange text-accent-foreground shadow-gotham"
+                : theme === 'alfred'
+                ? "bg-accent text-accent-foreground shadow-elegant"
+                : "bg-accent text-accent-foreground shadow-chaos"
+              : "theme-panel text-card-foreground"
+          )}
+        >
         {speakerName && isUser && (
           <div className="text-xs font-semibold mb-1 opacity-70 tracking-wider">
             {speakerName}
@@ -58,6 +65,37 @@ const ChatMessage = ({ message, isUser, isTyping = false, speakerName, imageUrl 
           </div>
         ) : (
           <p className="text-sm leading-relaxed">{message}</p>
+        )}
+        </div>
+
+        {/* TTS Speaker button for AI messages */}
+        {!isUser && !isTyping && message && onSpeak && (
+          <div className="flex justify-end">
+            <Button
+              onClick={isSpeaking ? onStopSpeaking : onSpeak}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-6 px-2 text-xs opacity-60 hover:opacity-100 transition-opacity",
+                theme === 'batman' ? 'hover:text-primary hover:glow-gold' :
+                theme === 'alfred' ? 'hover:text-primary hover-silver-glow' :
+                'hover:text-primary hover-chaos-glow'
+              )}
+              title={isSpeaking ? "Stop speaking" : "Speak message"}
+            >
+              {isSpeaking ? (
+                <>
+                  <VolumeX className="w-3 h-3 mr-1" />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3 h-3 mr-1" />
+                  Speak
+                </>
+              )}
+            </Button>
+          </div>
         )}
       </div>
 

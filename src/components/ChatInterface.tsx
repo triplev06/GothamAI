@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, X } from "lucide-react";
+import { Send, Image as ImageIcon, X, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -14,6 +14,10 @@ import alfredPortrait from "@/assets/alfred-portrait.png";
 import alfredBackground from "@/assets/alfredBg.png";
 import jokerPortrait from "@/assets/joker-portrait.png";
 import jokerBackground from "@/assets/joker-background.png";
+import { speak, stopSpeaking, initVoices, type CharacterVoice } from "@/utils/textToSpeech";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 interface Message {
   text: string;
@@ -43,13 +47,21 @@ const ChatInterface = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Initialize TTS voices on mount
+  useEffect(() => {
+    initVoices();
+  }, []);
+
   // Update initial message when theme changes
   useEffect(() => {
     setMessages([{ text: getInitialMessage(), isUser: false }]);
+    stopSpeaking(); // Stop any ongoing speech when switching themes
+    setSpeakingMessageIndex(null);
   }, [theme]);
 
   const scrollToBottom = () => {
@@ -59,6 +71,27 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  const handleSpeak = async (messageIndex: number, text: string) => {
+    // Stop any ongoing speech
+    stopSpeaking();
+
+    // Set the speaking message index
+    setSpeakingMessageIndex(messageIndex);
+
+    try {
+      await speak(text, theme as CharacterVoice);
+    } catch (error) {
+      console.error('TTS error:', error);
+    } finally {
+      setSpeakingMessageIndex(null);
+    }
+  };
+
+  const handleStopSpeaking = () => {
+    stopSpeaking();
+    setSpeakingMessageIndex(null);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,29 +150,103 @@ const ChatInterface = () => {
     setIsLoading(true);
     setIsTyping(true);
 
-    try {
-      const { data, error } = await supabase.functions.invoke("chat", {
-        body: {
-          message: text.trim() || "Analyze this image",
-          characterMode: theme, // Pass the theme to determine personality
-          image: imageToSend // Pass the base64 image if present
-        },
-      });
+    // Add empty message that will be populated by streaming
+    const streamingMessageIndex = messages.length + 1;
+    setMessages((prev) => [...prev, { text: "", isUser: false }]);
 
-      if (error) {
-        throw error;
+    try {
+      // Use Supabase Edge Function with streaming
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({
+            message: text.trim() || "Analyze this image",
+            characterMode: theme,
+            image: imageToSend,
+            stream: true,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setIsTyping(false);
+      // Check if response is JSON or SSE
+      const contentType = response.headers.get('content-type');
 
-      if (data?.response) {
-        setMessages((prev) => [...prev, { text: data.response, isUser: false }]);
+      if (contentType?.includes('application/json')) {
+        // Handle JSON response (function calls or collected stream)
+        const data = await response.json();
+        setIsTyping(false);
+
+        if (data?.response) {
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[streamingMessageIndex] = { text: data.response, isUser: false };
+            return newMessages;
+          });
+        } else {
+          throw new Error("No response from assistant");
+        }
       } else {
-        throw new Error("No response from assistant");
+        // Handle SSE streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let streamedText = "";
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  setIsTyping(false);
+                  break;
+                }
+
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    streamedText += parsed.content;
+                    // Update the streaming message in real-time
+                    setMessages((prev) => {
+                      const newMessages = [...prev];
+                      newMessages[streamingMessageIndex] = { text: streamedText, isUser: false };
+                      return newMessages;
+                    });
+                  }
+                } catch (e) {
+                  // Ignore parse errors
+                }
+              }
+            }
+          }
+        }
+
+        setIsTyping(false);
+
+        if (!streamedText) {
+          throw new Error("No response from assistant");
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
       setIsTyping(false);
+
+      // Remove the empty streaming message on error
+      setMessages((prev) => prev.slice(0, -1));
 
       let errorMessage = theme === 'batman'
         ? "System malfunction. Try again."
@@ -178,7 +285,7 @@ const ChatInterface = () => {
     sendMessage(inputText);
   };
 
-  const handleVoiceTranscript = (text: string, speakerName?: string) => {
+  const handleVoiceTranscript = async (text: string, speakerName?: string) => {
     if (!text.trim() || isLoading) return;
 
     const userMessage = { text: text.trim(), isUser: true, speakerName };
@@ -186,27 +293,101 @@ const ChatInterface = () => {
     setIsLoading(true);
     setIsTyping(true);
 
-    // Send message to AI (same as sendMessage but without adding message again)
-    supabase.functions.invoke("chat", {
-      body: {
-        message: text.trim(),
-        characterMode: theme // Pass the theme to determine personality
-      },
-    })
-      .then(({ data, error }) => {
-        if (error) throw error;
+    // Add empty message that will be populated by streaming
+    const streamingMessageIndex = messages.length + 1;
+    setMessages((prev) => [...prev, { text: "", isUser: false }]);
 
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({
+            message: text.trim(),
+            characterMode: theme,
+            stream: true,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if response is JSON or SSE
+      const contentType = response.headers.get('content-type');
+
+      if (contentType?.includes('application/json')) {
+        // Handle JSON response (function calls or collected stream)
+        const data = await response.json();
         setIsTyping(false);
 
         if (data?.response) {
-          setMessages((prev) => [...prev, { text: data.response, isUser: false }]);
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[streamingMessageIndex] = { text: data.response, isUser: false };
+            return newMessages;
+          });
         } else {
           throw new Error("No response from assistant");
         }
-      })
-      .catch((error) => {
-        console.error("Error sending message:", error);
+      } else {
+        // Handle SSE streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let streamedText = "";
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  setIsTyping(false);
+                  break;
+                }
+
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    streamedText += parsed.content;
+                    setMessages((prev) => {
+                      const newMessages = [...prev];
+                      newMessages[streamingMessageIndex] = { text: streamedText, isUser: false };
+                      return newMessages;
+                    });
+                  }
+                } catch (e) {
+                  // Ignore parse errors
+                }
+              }
+            }
+          }
+        }
+
         setIsTyping(false);
+
+        if (!streamedText) {
+          throw new Error("No response from assistant");
+        }
+      }
+    }
+    catch (error) {
+      console.error("Error sending message:", error);
+      setIsTyping(false);
+
+      // Remove the empty streaming message on error
+      setMessages((prev) => prev.slice(0, -1));
 
         let errorMessage = theme === 'batman'
           ? "System malfunction. Try again."
@@ -230,15 +411,64 @@ const ChatInterface = () => {
 
         setMessages((prev) => [...prev, { text: errorMessage, isUser: false }]);
 
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        setIsLoading(false);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const exportConversation = () => {
+    const characterName = theme === 'batman' ? 'Batman' : theme === 'alfred' ? 'Alfred Pennyworth' : 'The Joker';
+    const timestamp = new Date().toLocaleString();
+
+    let exportText = `=================================================\n`;
+    exportText += `  DIGITAL WHISPERER AI - CONVERSATION EXPORT\n`;
+    exportText += `  Character: ${characterName}\n`;
+    exportText += `  Date: ${timestamp}\n`;
+    exportText += `=================================================\n\n`;
+
+    messages.forEach((msg, index) => {
+      if (msg.isUser) {
+        exportText += `👤 USER${msg.speakerName ? ` (${msg.speakerName})` : ''}:\n`;
+      } else {
+        const characterIcon = theme === 'batman' ? '🦇' : theme === 'alfred' ? '🎩' : '🃏';
+        exportText += `${characterIcon} ${characterName.toUpperCase()}:\n`;
+      }
+      exportText += `${msg.text}\n`;
+      if (msg.imageUrl) {
+        exportText += `[Image attached]\n`;
+      }
+      exportText += `\n`;
+    });
+
+    exportText += `=================================================\n`;
+    exportText += `End of conversation\n`;
+    exportText += `Generated by Digital Whisperer AI\n`;
+    exportText += `=================================================`;
+
+    // Create download
+    const blob = new Blob([exportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${theme}-${new Date().getTime()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Conversation Exported",
+      description: theme === 'batman'
+        ? "Archive secured."
+        : theme === 'alfred'
+        ? "Your conversation has been successfully exported, sir."
+        : "Downloaded! Now spread the chaos!",
+    });
   };
 
   const heroImage = theme === 'batman' ? batmanHeroImage : theme === 'alfred' ? alfredPortrait : jokerPortrait;
@@ -319,6 +549,23 @@ const ChatInterface = () => {
                 </p>
               </div>
             </div>
+            <Button
+              onClick={exportConversation}
+              variant="outline"
+              size="sm"
+              disabled={messages.length <= 1}
+              className={`${
+                theme === 'batman'
+                  ? 'hover:border-primary hover:glow-gold'
+                  : theme === 'alfred'
+                  ? 'hover:border-primary hover-silver-glow'
+                  : 'hover:border-primary hover-chaos-glow'
+              } transition-all`}
+              title="Export conversation"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
           </div>
         </div>
 
@@ -332,6 +579,9 @@ const ChatInterface = () => {
                 isUser={message.isUser}
                 speakerName={message.speakerName}
                 imageUrl={message.imageUrl}
+                onSpeak={() => handleSpeak(index, message.text)}
+                onStopSpeaking={handleStopSpeaking}
+                isSpeaking={speakingMessageIndex === index}
               />
             ))}
             {isTyping && (
