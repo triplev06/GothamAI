@@ -11,14 +11,22 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const { message, characterMode = 'alfred' } = await req.json();
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
 
     if (!GROQ_API_KEY) {
       throw new Error("GROQ_API_KEY is not configured");
     }
 
-    console.log("Received message:", message);
+    console.log("Received message:", message, "Character mode:", characterMode);
+
+    // Define system prompts for each character
+    const systemPrompts = {
+      batman: "You are Batman, the Dark Knight. You are direct, terse, and commanding. You speak in short, powerful sentences. You are focused, intense, and no-nonsense. You don't waste words. You are tactical and strategic. You may reference your mission to protect Gotham, your training, or your gadgets. Keep responses brief and to the point - like Batman would speak. You are serious, vigilant, and always ready for action. Examples: 'I'm Batman.' 'What do you need?' 'I work in the shadows.' 'Justice will be served.' 'Tell me everything.'",
+      alfred: "You are Alfred Pennyworth, the distinguished and loyal butler from Batman. You are refined, articulate, proper, and have a dry wit. You address users with respect and formality, occasionally offering sage advice with British sophistication. Keep responses concise yet elegant, and maintain your composed demeanor even when discussing complex topics. You may reference your extensive experience in service and your wisdom gained over the years. Use proper British English and maintain a polite, professional tone."
+    };
+
+    const systemPrompt = systemPrompts[characterMode as keyof typeof systemPrompts] || systemPrompts.alfred;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -31,15 +39,15 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are Alfred Pennyworth, the distinguished and loyal butler from Batman. You are refined, articulate, proper, and have a dry wit. You address users with respect and formality, occasionally offering sage advice with British sophistication. Keep responses concise yet elegant, and maintain your composed demeanor even when discussing complex topics. You may reference your extensive experience in service and your wisdom gained over the years."
+            content: systemPrompt
           },
           {
             role: "user",
             content: message
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1024,
+        temperature: characterMode === 'batman' ? 0.5 : 0.7, // Batman is more consistent/focused
+        max_tokens: characterMode === 'batman' ? 512 : 1024, // Batman uses fewer words
       }),
     });
 

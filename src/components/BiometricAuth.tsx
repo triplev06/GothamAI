@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { FaceAuth } from "./FaceAuth";
 import { PasswordAuth } from "./PasswordAuth";
 import { UnifiedEnrollment } from "./UnifiedEnrollment";
+import { ThemeToggle } from "./ThemeToggle";
 import { Mic, Camera, UserPlus, CheckCircle2, Circle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
 import { extractVoiceFeatures, compareVoiceFeatures, VoiceFeatures } from "@/utils/voiceBiometrics";
 
 interface BiometricAuthProps {
@@ -30,6 +32,7 @@ interface VoiceProfileWithUser {
 }
 
 export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
+  const { theme } = useTheme();
   const [mode, setMode] = useState<"auth" | "enroll">("auth");
   const [activeTab, setActiveTab] = useState<"voice" | "face" | "password">("voice");
   const [isRecording, setIsRecording] = useState(false);
@@ -47,14 +50,16 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       // Verify both authentications are for the same user profile
       if (authStatus.voice.userProfileId === authStatus.face.userProfileId) {
         toast({
-          title: "Full Authentication Complete",
-          description: `Welcome, ${authStatus.voice.userName}! Both biometrics verified.`,
+          title: "Access Granted",
+          description: theme === 'batman'
+            ? `Welcome to the Batcave, ${authStatus.voice.userName}. All security protocols cleared.`
+            : `Welcome, ${authStatus.voice.userName}. Authentication successful. You may proceed.`,
         });
         onAuthenticated(authStatus.voice.userName);
       } else {
         toast({
-          title: "Authentication Mismatch",
-          description: `Voice and face belong to different accounts. Voice: "${authStatus.voice.userName}", Face: "${authStatus.face.userName}". Please re-authenticate.`,
+          title: theme === 'batman' ? "Security Breach Detected" : "Authentication Mismatch",
+          description: `Biometric mismatch. Voice: "${authStatus.voice.userName}", Face: "${authStatus.face.userName}". Access denied.`,
           variant: "destructive",
         });
         // Reset authentication
@@ -73,10 +78,10 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }));
 
     toast({
-      title: "Face Authentication Complete",
+      title: "Facial Recognition Complete",
       description: authStatus.voice.authenticated
-        ? "Checking identity match..."
-        : "Now authenticate with your voice.",
+        ? "Verifying credentials..."
+        : "Voice authentication required.",
     });
 
     // Auto-switch to voice tab if not yet authenticated
@@ -92,10 +97,10 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }));
 
     toast({
-      title: "Voice Authentication Complete",
+      title: "Voice Pattern Recognized",
       description: authStatus.face.authenticated
-        ? "Checking identity match..."
-        : "Now authenticate with your face.",
+        ? "Verifying credentials..."
+        : "Facial scan required.",
     });
 
     // Auto-switch to face tab if not yet authenticated
@@ -106,8 +111,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
 
   const handleEnrollmentComplete = (userName: string) => {
     toast({
-      title: "Enrollment Complete!",
-      description: `Welcome, ${userName}! You can now sign in.`,
+      title: "Personnel Registered",
+      description: `${userName} authorized. Security clearance granted.`,
     });
     setMode("auth");
   };
@@ -115,8 +120,8 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
   const handlePasswordAuthSuccess = (userName: string) => {
     // Password bypasses biometric requirements
     toast({
-      title: "Authentication Successful",
-      description: `Welcome back, ${userName}!`,
+      title: "Access Granted",
+      description: `Welcome to the Batcave, ${userName}.`,
     });
     onAuthenticated(userName);
   };
@@ -203,18 +208,18 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
         // Check if match meets threshold (75% - increased for better security)
         if (bestMatch.score >= 0.75) {
           toast({
-            title: "Authentication Successful",
-            description: `Welcome, ${bestMatch.name}! (${Math.round(bestMatch.score * 100)}% match)`,
+            title: "Voice Pattern Confirmed",
+            description: `Identity verified: ${bestMatch.name} (${Math.round(bestMatch.score * 100)}% match)`,
           });
 
           handleVoiceAuthSuccess(bestMatch.name, bestMatch.userProfileId);
         } else {
           toast({
-            title: "Authentication Failed",
-            description: `Voice not recognized. ${
+            title: "Access Denied",
+            description: `Voice pattern not recognized. ${
               bestMatch.score > 0
-                ? `Best match: ${Math.round(bestMatch.score * 100)}% (minimum 75% required)`
-                : "No matches found."
+                ? `Confidence: ${Math.round(bestMatch.score * 100)}% (75% required)`
+                : "No matching profiles."
             }`,
             variant: "destructive",
           });
@@ -248,39 +253,66 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     }
   };
 
+  const authTitle = theme === 'batman' ? 'Batcave Security Protocol' : 'Biometric Authentication';
+  const authDescription = mode === "auth"
+    ? theme === 'batman'
+      ? "Complete biometric authentication to access secure systems"
+      : "Complete both voice AND face authentication, or use your password backup"
+    : mode === "enroll"
+    ? theme === 'batman'
+      ? "Register new authorized personnel"
+      : "Enroll a new biometric profile"
+    : "Configure backup security credentials";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Biometric Sign In</CardTitle>
-          <CardDescription>
-            {mode === "auth"
-              ? "Complete both voice AND face authentication, or use your password backup"
-              : mode === "enroll"
-              ? "Enroll a new biometric profile"
-              : "Set up a password backup for your account"}
-          </CardDescription>
+    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${
+      theme === 'batman' ? 'gradient-secondary' : 'gradient-secondary'
+    }`}>
+      {/* Theme Toggle Button */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
+      <div className={`absolute inset-0 opacity-20 ${
+        theme === 'batman'
+          ? 'bg-[radial-gradient(circle_at_center,_hsl(43_74%_49%_/_0.15)_0%,_transparent_70%)]'
+          : 'bg-[radial-gradient(circle_at_center,_hsl(0_0%_75%_/_0.15)_0%,_transparent_70%)]'
+      }`}></div>
+      <Card className={`w-full max-w-2xl theme-entrance relative z-10 ${
+        theme === 'batman' ? 'shadow-gotham-lg' : 'shadow-elegant-lg'
+      }`}>
+        <CardHeader className={`text-center theme-panel`}>
+          <CardTitle className={`text-2xl text-primary ${
+            theme === 'batman' ? 'text-glow-gold' : 'text-glow-silver'
+          }`}>
+            {authTitle}
+          </CardTitle>
+          <CardDescription>{authDescription}</CardDescription>
 
           {/* Authentication Progress Indicators */}
           {mode === "auth" && (
-            <div className="flex justify-center gap-6 mt-4 pt-4 border-t">
+            <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-border">
               <div className="flex items-center gap-2">
                 {authStatus.voice.authenticated ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  <CheckCircle2 className={`w-5 h-5 text-primary ${
+                    theme === 'batman' ? 'glow-gold' : 'glow-silver'
+                  }`} />
                 ) : (
                   <Circle className="w-5 h-5 text-muted-foreground" />
                 )}
-                <span className={`text-sm ${authStatus.voice.authenticated ? "text-green-500 font-semibold" : "text-muted-foreground"}`}>
+                <span className={`text-sm ${authStatus.voice.authenticated ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                   Voice {authStatus.voice.authenticated && `(${authStatus.voice.userName})`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {authStatus.face.authenticated ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  <CheckCircle2 className={`w-5 h-5 text-primary ${
+                    theme === 'batman' ? 'glow-gold' : 'glow-silver'
+                  }`} />
                 ) : (
                   <Circle className="w-5 h-5 text-muted-foreground" />
                 )}
-                <span className={`text-sm ${authStatus.face.authenticated ? "text-green-500 font-semibold" : "text-muted-foreground"}`}>
+                <span className={`text-sm ${authStatus.face.authenticated ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                   Face {authStatus.face.authenticated && `(${authStatus.face.userName})`}
                 </span>
               </div>

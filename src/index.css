@@ -7,42 +7,105 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
-    --background: 0 0% 0%;
+  :root,
+  [data-theme="batman"] {
+    /* The Dark Knight - Batman Theme inspired by Nolan & Pattinson films */
+    /* Deep Gotham Night - Almost black with subtle blue undertone */
+    --background: 210 15% 6%;
+    --foreground: 0 0% 92%;
+
+    /* Bat-Tech Surfaces - Dark gunmetal panels */
+    --card: 210 12% 12%;
+    --card-foreground: 0 0% 92%;
+
+    --popover: 210 12% 10%;
+    --popover-foreground: 0 0% 92%;
+
+    /* Wayne Gold - Iconic dark gold accent from the bat symbol */
+    --primary: 43 74% 49%;
+    --primary-foreground: 210 15% 8%;
+
+    /* Gotham Shadows - Deep teal-navy like Gotham's night sky */
+    --secondary: 210 40% 15%;
+    --secondary-foreground: 0 0% 92%;
+
+    /* Tactical Gray - Muted surfaces */
+    --muted: 210 12% 18%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Fire & Danger - Burnt orange accent from explosions */
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 92%;
+
+    /* Destruction - Deep red for danger */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Armored Edges - Subtle steel-gray borders */
+    --border: 210 12% 25%;
+    --input: 210 12% 12%;
+    --ring: 43 74% 49%;
+
+    --radius: 0.5rem;
+
+    /* Batman Theme Variables */
+    --gradient-primary: linear-gradient(135deg, hsl(43 74% 49%), hsl(38 90% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 15% 6%), hsl(210 20% 12%), hsl(210 15% 6%));
+    --gradient-background: linear-gradient(180deg, hsl(210 40% 8%), hsl(210 40% 15%), hsl(210 30% 10%));
+    --theme-accent-1: 43 74% 49%;
+    --theme-accent-2: 24 100% 50%;
+    --theme-accent-3: 210 40% 15%;
+    --theme-border: 210 12% 25%;
+  }
+
+  [data-theme="alfred"] {
+    /* Alfred Pennyworth - Distinguished Butler Theme */
+    /* Elegant grayscale with subtle burgundy accents */
+    --background: 0 0% 8%;
     --foreground: 0 0% 96%;
 
-    --card: 357 11% 27%;
+    /* Sophisticated surfaces - Warm dark gray */
+    --card: 357 11% 18%;
     --card-foreground: 0 0% 96%;
 
-    --popover: 357 11% 27%;
+    --popover: 357 11% 16%;
     --popover-foreground: 0 0% 96%;
 
-    --primary: 0 0% 69%;
-    --primary-foreground: 0 0% 0%;
+    /* Distinguished Silver - Elegant and refined */
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 8%;
 
+    /* Refined burgundy - Subtle sophistication */
     --secondary: 357 11% 27%;
     --secondary-foreground: 0 0% 96%;
 
-    --muted: 357 11% 27%;
-    --muted-foreground: 0 0% 75%;
+    /* Muted elegance */
+    --muted: 357 11% 22%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 0 0% 75%;
-    --accent-foreground: 0 0% 0%;
+    /* Subtle gold accent - Understated luxury */
+    --accent: 38 50% 60%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 96%;
+    /* Destruction - Refined red */
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 69%;
-    --input: 357 11% 27%;
+    /* Elegant borders */
+    --border: 0 0% 30%;
+    --input: 357 11% 18%;
     --ring: 0 0% 75%;
 
     --radius: 0.5rem;
 
-    /* Alfred Pennyworth theme */
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 69%), hsl(0 0% 75%));
-    --gradient-accent: linear-gradient(135deg, hsl(357 11% 27%), hsl(0 0% 0%));
-    --alfred-silver: 0 0% 75%;
-    --alfred-gray: 0 0% 69%;
+    /* Alfred Theme Variables */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 75%), hsl(0 0% 85%));
+    --gradient-secondary: linear-gradient(135deg, hsl(357 11% 27%), hsl(357 11% 18%));
+    --gradient-background: linear-gradient(180deg, hsl(0 0% 8%), hsl(357 11% 12%), hsl(0 0% 8%));
+    --theme-accent-1: 0 0% 75%;
+    --theme-accent-2: 38 50% 60%;
+    --theme-accent-3: 357 11% 27%;
+    --theme-border: 0 0% 30%;
   }
 }
 
@@ -53,5 +116,271 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Batman theme background gradients */
+  [data-theme="batman"] body {
+    background-image: radial-gradient(circle at 50% 0%, hsl(210 40% 10% / 0.3), transparent 50%),
+                      radial-gradient(circle at 100% 100%, hsl(43 74% 49% / 0.05), transparent 40%);
+  }
+
+  /* Alfred theme background gradients */
+  [data-theme="alfred"] body {
+    background-image: radial-gradient(circle at 50% 0%, hsl(357 11% 12% / 0.3), transparent 50%),
+                      radial-gradient(circle at 100% 100%, hsl(0 0% 75% / 0.05), transparent 40%);
+  }
+}
+
+@layer components {
+  /* Batman-themed glow effects */
+  .glow-gold {
+    box-shadow: 0 0 10px hsl(var(--bat-gold) / 0.3),
+                0 0 20px hsl(var(--bat-gold) / 0.2),
+                0 0 30px hsl(var(--bat-gold) / 0.1);
+  }
+
+  .glow-gold-intense {
+    box-shadow: 0 0 15px hsl(var(--bat-gold) / 0.5),
+                0 0 30px hsl(var(--bat-gold) / 0.3),
+                0 0 45px hsl(var(--bat-gold) / 0.2);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 10px hsl(var(--bat-orange) / 0.3),
+                0 0 20px hsl(var(--bat-orange) / 0.2);
+  }
+
+  /* Gotham depth shadows */
+  .shadow-gotham {
+    box-shadow: 0 4px 6px hsl(210 15% 0% / 0.5),
+                0 10px 20px hsl(210 15% 0% / 0.3),
+                inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  }
+
+  .shadow-gotham-lg {
+    box-shadow: 0 10px 30px hsl(210 15% 0% / 0.6),
+                0 20px 60px hsl(210 15% 0% / 0.4),
+                inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  }
+
+  /* Bat-Tech panel effect */
+  .panel-tech {
+    background: linear-gradient(135deg, hsl(210 12% 14%), hsl(210 12% 10%));
+    border: 1px solid hsl(var(--armor-steel));
+    box-shadow: 0 4px 6px hsl(210 15% 0% / 0.5),
+                inset 0 1px 0 hsl(0 0% 100% / 0.05),
+                inset 0 -1px 0 hsl(210 15% 0% / 0.3);
+  }
+
+  /* Carbon fiber texture overlay */
+  .carbon-fiber-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/carbonFiberPattern.png');
+    background-size: 200px 200px;
+    opacity: 0.08;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* Animated bat signal effect */
+  @keyframes bat-signal-pulse {
+    0%, 100% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  .bat-signal-pulse {
+    animation: bat-signal-pulse 3s ease-in-out infinite;
+  }
+
+  /* Dark Knight entrance animation */
+  @keyframes dark-knight-entrance {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dark-knight-entrance {
+    animation: dark-knight-entrance 0.6s ease-out;
+  }
+
+  /* Gold accent hover effect */
+  .hover-gold-glow {
+    transition: all 0.3s ease;
+  }
+
+  .hover-gold-glow:hover {
+    box-shadow: 0 0 15px hsl(var(--bat-gold) / 0.4),
+                0 0 30px hsl(var(--bat-gold) / 0.2);
+    border-color: hsl(var(--bat-gold));
+  }
+
+  /* Gradient overlays */
+  .gradient-dark-knight {
+    background: var(--gradient-dark-knight);
+  }
+
+  .gradient-gotham {
+    background: var(--gradient-gotham);
+  }
+
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  /* Text glow effects */
+  .text-glow-gold {
+    text-shadow: 0 0 10px hsl(var(--bat-gold) / 0.5),
+                 0 0 20px hsl(var(--bat-gold) / 0.3),
+                 0 0 30px hsl(var(--bat-gold) / 0.1);
+  }
+
+  /* Armored button effect */
+  .btn-armored {
+    background: linear-gradient(135deg, hsl(210 12% 16%), hsl(210 12% 12%));
+    border: 1px solid hsl(var(--armor-steel));
+    box-shadow: 0 2px 4px hsl(210 15% 0% / 0.5),
+                inset 0 1px 0 hsl(0 0% 100% / 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .btn-armored:hover {
+    background: linear-gradient(135deg, hsl(210 12% 18%), hsl(210 12% 14%));
+    box-shadow: 0 4px 8px hsl(210 15% 0% / 0.6),
+                0 0 20px hsl(var(--bat-gold) / 0.2),
+                inset 0 1px 0 hsl(0 0% 100% / 0.1);
+  }
+
+  .btn-armored:active {
+    box-shadow: inset 0 2px 4px hsl(210 15% 0% / 0.5);
+  }
+
+  /* ===== ALFRED THEME STYLES ===== */
+
+  /* Elegant silver glow effects */
+  .glow-silver {
+    box-shadow: 0 0 10px hsl(var(--theme-accent-1) / 0.3),
+                0 0 20px hsl(var(--theme-accent-1) / 0.2),
+                0 0 30px hsl(var(--theme-accent-1) / 0.1);
+  }
+
+  .glow-silver-intense {
+    box-shadow: 0 0 15px hsl(var(--theme-accent-1) / 0.4),
+                0 0 30px hsl(var(--theme-accent-1) / 0.25),
+                0 0 45px hsl(var(--theme-accent-1) / 0.15);
+  }
+
+  /* Refined shadows for Alfred theme */
+  .shadow-elegant {
+    box-shadow: 0 4px 6px hsl(0 0% 0% / 0.4),
+                0 10px 20px hsl(0 0% 0% / 0.25),
+                inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  }
+
+  .shadow-elegant-lg {
+    box-shadow: 0 10px 30px hsl(0 0% 0% / 0.5),
+                0 20px 60px hsl(0 0% 0% / 0.3),
+                inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  }
+
+  /* Distinguished panel effect */
+  .panel-distinguished {
+    background: linear-gradient(135deg, hsl(357 11% 20%), hsl(357 11% 16%));
+    border: 1px solid hsl(var(--theme-border));
+    box-shadow: 0 4px 6px hsl(0 0% 0% / 0.4),
+                inset 0 1px 0 hsl(0 0% 100% / 0.08),
+                inset 0 -1px 0 hsl(0 0% 0% / 0.3);
+  }
+
+  /* Elegant pulse animation */
+  @keyframes elegant-pulse {
+    0%, 100% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+
+  .elegant-pulse {
+    animation: elegant-pulse 4s ease-in-out infinite;
+  }
+
+  /* Distinguished entrance animation */
+  @keyframes distinguished-entrance {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .distinguished-entrance {
+    animation: distinguished-entrance 0.8s ease-out;
+  }
+
+  /* Silver accent hover effect */
+  .hover-silver-glow {
+    transition: all 0.3s ease;
+  }
+
+  .hover-silver-glow:hover {
+    box-shadow: 0 0 15px hsl(var(--theme-accent-1) / 0.35),
+                0 0 30px hsl(var(--theme-accent-1) / 0.2);
+    border-color: hsl(var(--theme-accent-1));
+  }
+
+  /* Text glow effects for Alfred */
+  .text-glow-silver {
+    text-shadow: 0 0 10px hsl(var(--theme-accent-1) / 0.4),
+                 0 0 20px hsl(var(--theme-accent-1) / 0.25),
+                 0 0 30px hsl(var(--theme-accent-1) / 0.1);
+  }
+
+  /* Theme-aware styles that adapt */
+  [data-theme="batman"] .theme-glow {
+    box-shadow: 0 0 15px hsl(var(--theme-accent-1) / 0.4),
+                0 0 30px hsl(var(--theme-accent-1) / 0.2);
+  }
+
+  [data-theme="alfred"] .theme-glow {
+    box-shadow: 0 0 15px hsl(var(--theme-accent-1) / 0.35),
+                0 0 30px hsl(var(--theme-accent-1) / 0.2);
+  }
+
+  [data-theme="batman"] .theme-panel {
+    background: linear-gradient(135deg, hsl(210 12% 14%), hsl(210 12% 10%));
+    border: 1px solid hsl(var(--theme-border));
+  }
+
+  [data-theme="alfred"] .theme-panel {
+    background: linear-gradient(135deg, hsl(357 11% 20%), hsl(357 11% 16%));
+    border: 1px solid hsl(var(--theme-border));
+  }
+
+  [data-theme="batman"] .theme-entrance {
+    animation: dark-knight-entrance 0.6s ease-out;
+  }
+
+  [data-theme="alfred"] .theme-entrance {
+    animation: distinguished-entrance 0.8s ease-out;
   }
 }

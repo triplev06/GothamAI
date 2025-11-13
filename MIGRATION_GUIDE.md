@@ -100,11 +100,11 @@ You need to deploy the chat function to your Supabase Edge Functions.
 2. **Test the application**:
    - Open your browser to the local URL
    - You should see the voice enrollment wizard (if no profiles exist)
-   - Try sending a text message to Alfred
+   - Try sending a text message to Alfred or The Dark Knight
    - Try using voice input
 
 3. **Verify it works**:
-   - Alfred should respond using Groq's Llama model
+   - Alfred/Batman should respond using Groq's Llama model
    - Voice profiles should be saved to your new Supabase database
    - Check browser console for any errors
 

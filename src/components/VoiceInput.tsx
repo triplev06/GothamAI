@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/contexts/ThemeContext";
 import { extractVoiceFeatures, compareVoiceFeatures, VoiceFeatures } from "@/utils/voiceBiometrics";
 
 interface VoiceInputProps {
@@ -46,6 +47,7 @@ declare global {
 }
 
 const VoiceInput = ({ onTranscript, isAssistantSpeaking }: VoiceInputProps) => {
+  const { theme } = useTheme();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -364,8 +366,12 @@ const VoiceInput = ({ onTranscript, isAssistantSpeaking }: VoiceInputProps) => {
         size="lg"
         className={`rounded-full w-16 h-16 transition-all duration-300 ${
           isRecording
-            ? "bg-destructive hover:bg-destructive/90 animate-pulse shadow-lg"
-            : "bg-primary hover:bg-primary/90 hover:scale-105 shadow-md border-2 border-accent"
+            ? theme === 'batman'
+              ? "bg-destructive hover:bg-destructive/90 animate-pulse shadow-gotham-lg glow-orange"
+              : "bg-destructive hover:bg-destructive/90 animate-pulse shadow-elegant-lg"
+            : theme === 'batman'
+            ? "gradient-gold hover:glow-gold-intense hover:scale-105 shadow-gotham border-2 border-primary/50 text-background font-bold"
+            : "gradient-primary hover:glow-silver-intense hover:scale-105 shadow-elegant border-2 border-primary/50 text-primary-foreground font-bold"
         }`}
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing || isAssistantSpeaking}
