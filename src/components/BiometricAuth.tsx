@@ -49,11 +49,17 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     if (authStatus.voice.authenticated && authStatus.face.authenticated) {
       // Verify both authentications are for the same user profile
       if (authStatus.voice.userProfileId === authStatus.face.userProfileId) {
+        // Auto-dismiss after 3 seconds on mobile (screen width < 768px)
+        const isMobile = window.innerWidth < 768;
+
         toast({
           title: "Access Granted",
           description: theme === 'batman'
             ? `Welcome to the Batcave, ${authStatus.voice.userName}. All security protocols cleared.`
-            : `Welcome, ${authStatus.voice.userName}. Authentication successful. You may proceed.`,
+            : theme === 'alfred'
+            ? `Welcome, ${authStatus.voice.userName}. Authentication successful. You may proceed.`
+            : `Welcome to the madness, ${authStatus.voice.userName}. HAHAHA!`,
+          duration: isMobile ? 3000 : 5000, // 3 seconds on mobile, 5 seconds on desktop
         });
         onAuthenticated(authStatus.voice.userName);
       } else {
@@ -77,11 +83,14 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       face: { authenticated: true, userName, userProfileId },
     }));
 
+    const isMobile = window.innerWidth < 768;
+
     toast({
       title: "Facial Recognition Complete",
       description: authStatus.voice.authenticated
         ? "Verifying credentials..."
         : "Voice authentication required.",
+      duration: isMobile ? 3000 : 5000,
     });
 
     // Auto-switch to voice tab if not yet authenticated
@@ -96,11 +105,14 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       voice: { authenticated: true, userName, userProfileId },
     }));
 
+    const isMobile = window.innerWidth < 768;
+
     toast({
       title: "Voice Pattern Recognized",
       description: authStatus.face.authenticated
         ? "Verifying credentials..."
         : "Facial scan required.",
+      duration: isMobile ? 3000 : 5000,
     });
 
     // Auto-switch to face tab if not yet authenticated
@@ -110,18 +122,24 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
   };
 
   const handleEnrollmentComplete = (userName: string) => {
+    const isMobile = window.innerWidth < 768;
+
     toast({
       title: "Personnel Registered",
       description: `${userName} authorized. Security clearance granted.`,
+      duration: isMobile ? 3000 : 5000,
     });
     setMode("auth");
   };
 
   const handlePasswordAuthSuccess = (userName: string) => {
     // Password bypasses biometric requirements
+    const isMobile = window.innerWidth < 768;
+
     toast({
       title: "Access Granted",
       description: `Welcome to the Batcave, ${userName}.`,
+      duration: isMobile ? 3000 : 5000,
     });
     onAuthenticated(userName);
   };
@@ -207,9 +225,12 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
 
         // Check if match meets threshold (75% - increased for better security)
         if (bestMatch.score >= 0.75) {
+          const isMobile = window.innerWidth < 768;
+
           toast({
             title: "Voice Pattern Confirmed",
             description: `Identity verified: ${bestMatch.name} (${Math.round(bestMatch.score * 100)}% match)`,
+            duration: isMobile ? 3000 : 5000,
           });
 
           handleVoiceAuthSuccess(bestMatch.name, bestMatch.userProfileId);
