@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, X, Download, HelpCircle, Volume2, VolumeX, Users } from "lucide-react";
+import { Send, Image as ImageIcon, X, Download, HelpCircle, Volume2, VolumeX, Users, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -9,6 +9,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import ChatMessage from "./ChatMessage";
 import VoiceInput from "./VoiceInput";
 import HelpModal from "./HelpModal";
+import UserSummary from "./UserSummary";
 import CouncilMode from "./CouncilMode";
 import { initSound, playMessageSound, playSendSound, toggleMute, playEasterEggSound } from "@/utils/soundEffects";
 import { detectEasterEgg, getEasterEggResponse, triggerEasterEggEffect } from "@/utils/easterEggs";
@@ -62,12 +63,22 @@ const ChatInterface = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isUserSummaryOpen, setIsUserSummaryOpen] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
   const [councilResponse, setCouncilResponse] = useState<CouncilResponse | null>(null);
   const [isCouncilLoading, setIsCouncilLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Get or create unique userId for memory system
+  const [userId] = useState(() => {
+    const stored = localStorage.getItem('gotham_ai_user_id');
+    if (stored) return stored;
+    const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('gotham_ai_user_id', newId);
+    return newId;
+  });
 
   // Initialize TTS voices and sound on mount
   useEffect(() => {
@@ -209,6 +220,7 @@ const ChatInterface = () => {
             characterMode: theme,
             image: imageToSend,
             stream: true,
+            userId: userId,
           }),
         }
       );
@@ -435,6 +447,7 @@ const ChatInterface = () => {
             message: text.trim(),
             characterMode: theme,
             stream: true,
+            userId: userId,
           }),
         }
       );
@@ -679,6 +692,22 @@ const ChatInterface = () => {
             </div>
             <div className="flex items-center gap-2">
               <Button
+                onClick={() => setIsUserSummaryOpen(true)}
+                variant="outline"
+                size="sm"
+                className={`${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
+                } transition-all`}
+                title="View user intelligence profiles"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </Button>
+              <Button
                 onClick={() => {
                   const newMuted = toggleMute();
                   setIsSoundMuted(newMuted);
@@ -865,6 +894,13 @@ const ChatInterface = () => {
       <HelpModal
         isOpen={isHelpModalOpen}
         onClose={() => setIsHelpModalOpen(false)}
+      />
+
+      {/* User Summary Modal */}
+      <UserSummary
+        isOpen={isUserSummaryOpen}
+        onClose={() => setIsUserSummaryOpen(false)}
+        userId={userId}
       />
     </div>
   );

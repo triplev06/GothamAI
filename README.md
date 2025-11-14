@@ -36,14 +36,27 @@ This isn't just another AI chatbot. This is a **multi-modal AI experience** feat
 - **Vision AI**: Image analysis using Llama 4 Scout vision model
 - **Text Chat**: Natural language conversations with persistent context
 
+### 🎬 **Cinematic Startup Videos**
+- **Character-Specific Intro Videos**: Each mode has its own cinematic startup animation
+  - **Batman**: AI-generated Batmobile startup sequence (18.6 MB, 8 seconds)
+  - **Alfred**: Elegant British manor intro with refined atmosphere (14.8 MB)
+  - **Joker**: Chaotic intro from Batman: Three Jokers trailer (22.2 MB, 8 seconds)
+- **Full-Screen Experience**: Videos play after biometric authentication
+- **Click-to-Skip**: Users can skip videos by clicking anywhere
+- **Responsive Scaling**: Videos fit all screen sizes with `object-contain`
+- **Mode-Aware**: Only plays when signing in with Batman, Alfred, or Joker mode (Council mode skips directly to app)
+- **Auto-Transition**: Seamlessly transitions to main app when video completes
+
 ### 🎵 **Immersive Sound Effects**
 - **Character-Specific Audio**: Each personality has unique sound effects
-  - **Batman**: Deep bat-signal swoosh
+  - **Batman**: SilentProtector.mp3 for bat-signal easter eggs
   - **Alfred**: Elegant refined chime
-  - **Joker**: Chaotic ascending laugh
+  - **Joker**: Evil-laugh-89423.mp3 for chaos mode
+- **Hybrid Sound System**: MP3 files with procedural fallbacks
+- **Sound Caching**: Files loaded once and cached for performance
 - **Message Sounds**: Audio feedback when sending and receiving messages
 - **Mute Control**: Toggle button in header to enable/disable sounds
-- **Web Audio API**: Procedurally generated sounds (no file downloads required)
+- **Web Audio API**: Procedurally generated sounds as fallbacks
 
 ### 👥 **Multi-Character Council Mode**
 - **Ask All Three Characters**: Get perspectives from Batman, Alfred, AND The Joker simultaneously
@@ -202,39 +215,48 @@ Schema is auto-created on first authentication attempt.
 
 ## 🎯 HOW TO DEMO FOR JUDGES
 
-### **1. Biometric Authentication (30 seconds)**
+### **1. Cinematic Startup Experience (30 seconds)** ⭐ NEW!
+*"The app begins with a cinematic intro video..."*
+- Start in Batman mode
+- Complete biometric authentication
+- **Batmobile startup video plays full-screen**
+- Click anywhere to skip or let it play
+- *"Each character has their own intro video - Batman's Batmobile, Alfred's manor, Joker's chaos!"*
+- Explain videos are mode-aware (only play for Batman/Alfred/Joker, not Council)
+
+### **2. Biometric Authentication (30 seconds)**
 *"First, I'll demonstrate our dual-factor biometric authentication..."*
 - Show face + voice authentication
 - Explain it requires BOTH to access
 - Mention data is encrypted in Supabase
 
-### **2. Character Switching (15 seconds)**
+### **3. Character Switching (15 seconds)**
 *"The app features three distinct AI personalities..."*
 - Toggle between Batman, Alfred, and Joker
 - Point out visual theme changes (colors, animations)
 - Highlight the 3-button selector
 
-### **3. Text-to-Speech & Sound Effects (45 seconds)**
+### **4. Text-to-Speech & Sound Effects (45 seconds)**
 *"Each character has a unique voice profile and sound effects..."*
 - Send a message to Batman → Click speaker button
-  - *"Notice the deep (0.5 pitch), slow voice and bat-signal swoosh"*
+  - *"Notice the deep (0.5 pitch), slow voice and SilentProtector.mp3 sound"*
 - Switch to Joker → Send same message → Click speaker
-  - *"Now it's high-pitched (1.5) and fast with chaotic laughter!"*
+  - *"Now it's high-pitched (1.5) and fast with evil-laugh-89423.mp3!"*
 - Switch to Alfred → Click speaker
   - *"British accent, refined with elegant chime"*
 - Show the mute button to toggle sounds
 
-### **4. Easter Eggs Demo (45 seconds)** ⭐ NEW!
+### **5. Easter Eggs Demo (45 seconds)** ⭐ NEW!
 *"The app has hidden interactive surprises..."*
 - In Batman mode, type: *"I'm Batman"*
-  - Show the golden bat-signal flash effect
+  - Show the golden bat-signal flash effect + SilentProtector.mp3 sound
 - Switch to Joker, type: *"Why so serious"*
-  - Show chaos mode with screen shake and glitch
+  - Show chaos mode with screen shake, glitch, and evil laugh audio
 - Switch to Alfred, type: *"Tea time"*
   - Show elegant silver glow effect
 - *"There are 15+ easter eggs total - users love discovering them!"*
 
-### **5. Council Mode (60 seconds)** ⭐ NEW!
+### **6. Council Mode (60 seconds)** ⭐ NEW!
 *"You can ask all three characters the same question..."*
 - Click the "Council" button in header
 - Ask: *"What is the best approach to solving a difficult problem?"*
@@ -245,7 +267,7 @@ Schema is auto-created on first authentication attempt.
 - Click speaker icons to hear each character speak
 - *"Perfect for decision-making and brainstorming!"*
 
-### **6. Function Calling / Tool Use (60 seconds)**
+### **7. Function Calling / Tool Use (60 seconds)**
 *"The AI can use tools to get real information..."*
 - Ask Batman: *"What's 15% of 47?"*
   - Show it uses the calculator tool
@@ -254,7 +276,7 @@ Schema is auto-created on first authentication attempt.
 - Ask Joker: *"What's the weather in Gotham?"*
   - Show it uses the weather tool (simulated)
 
-### **7. Image Analysis (60 seconds)**
+### **8. Image Analysis (60 seconds)**
 *"The AI can analyze images with character-specific perspectives..."*
 - Upload an image to Batman
   - *"See how he identifies security vulnerabilities, entry points"*
@@ -263,7 +285,7 @@ Schema is auto-created on first authentication attempt.
 - Upload to Joker
   - *"Joker finds chaos and humor in everything"*
 
-### **8. Voice Input (30 seconds)**
+### **9. Voice Input (30 seconds)**
 *"You can also interact via voice..."*
 - Click microphone button
 - Speak a question
@@ -279,7 +301,8 @@ Schema is auto-created on first authentication attempt.
 ✅ Function calling / tool augmentation
 ✅ Biometric authentication (face + voice)
 ✅ Character-specific TTS with pitch/rate tuning
-✅ **NEW**: Procedural sound generation with Web Audio API
+✅ **NEW**: Cinematic startup videos (55+ MB total, mode-aware playback)
+✅ **NEW**: Hybrid audio system (MP3 files + Web Audio API fallbacks)
 ✅ **NEW**: Multi-character parallel AI queries (Council Mode)
 ✅ **NEW**: Dynamic visual effects system with CSS animations
 
@@ -296,39 +319,44 @@ Schema is auto-created on first authentication attempt.
 ✅ Mobile-responsive design
 ✅ Real-time voice recognition with speaker ID
 ✅ Accessible UI with keyboard navigation
-✅ **NEW**: Immersive sound effects for every interaction
-✅ **NEW**: 15+ hidden easter eggs with visual effects
+✅ **NEW**: Cinematic character-specific startup videos
+✅ **NEW**: Immersive sound effects (MP3 + procedural audio)
+✅ **NEW**: 15+ hidden easter eggs with visual + audio effects
 ✅ **NEW**: Council mode for multi-perspective analysis
+✅ **NEW**: Click-to-skip video intros for accessibility
 
 ### **100% Free Resources**
 ✅ Groq API - Free tier (500k tokens/day)
 ✅ Web Speech API - Built into browsers
 ✅ Supabase - Free tier PostgreSQL + Edge Functions
 ✅ All models and APIs are free for development
-✅ **NEW**: No external audio files (procedurally generated)
+✅ **NEW**: Videos/audio included as bundled assets (no API costs)
 
 ---
 
-## 🎬 DEMO SCRIPT (6 MINUTES)
+## 🎬 DEMO SCRIPT (6.5 MINUTES)
 
 **[0:00 - 0:30] Introduction**
-*"Gotham AI is a multi-modal AI assistant featuring three distinct personalities from the Batman universe, each with unique voices, visual themes, analysis styles, and interactive surprises."*
+*"Gotham AI is a multi-modal AI assistant featuring three distinct personalities from the Batman universe, each with unique voices, visual themes, cinematic intros, analysis styles, and interactive surprises."*
 
-**[0:30 - 1:00] Biometric Auth**
+**[0:30 - 1:00] Cinematic Startup + Biometric Auth** ⭐
+- Start in Batman mode
 - Demonstrate face + voice authentication
-- Explain dual-factor security
+- **Batmobile intro video plays full-screen**
+- Click to skip or let it play
+- *"Each character has their own cinematic intro - Batman's Batmobile, Alfred's manor, Joker's chaos!"*
 
 **[1:00 - 1:45] Character Modes, TTS & Sound Effects**
 - Show all 3 characters
 - Demonstrate voice differences with speaker button
 - Highlight visual theme transitions
-- **NEW**: Show character-specific sound effects when sending/receiving messages
+- **NEW**: Show character-specific sound effects (SilentProtector.mp3, evil-laugh-89423.mp3)
 
 **[1:45 - 2:15] Easter Eggs** ⭐
-- **Batman**: Type "I'm Batman" → Show bat-signal flash
-- **Joker**: Type "Why so serious" → Show chaos mode
-- **Alfred**: Type "Tea time" → Show elegant glow
-- *"15+ hidden easter eggs with visual effects!"*
+- **Batman**: Type "I'm Batman" → Bat-signal flash + SilentProtector.mp3
+- **Joker**: Type "Why so serious" → Chaos mode + evil laugh
+- **Alfred**: Type "Tea time" → Elegant glow
+- *"15+ hidden easter eggs with visual AND audio effects!"*
 
 **[2:15 - 3:00] Council Mode** ⭐
 - Click "Council" button
@@ -352,8 +380,8 @@ Schema is auto-created on first authentication attempt.
 - Use voice input
 - Show complete loop: Voice → AI → TTS response
 
-**[5:30 - 6:00] Closing**
-*"All of this runs on 100% free APIs and demonstrates advanced AI engineering - function calling, vision models, biometrics, character-specific personalities, procedural audio, and interactive effects. Plus, users love discovering the hidden easter eggs!"*
+**[5:30 - 6:30] Closing**
+*"All of this runs on 100% free APIs and demonstrates advanced AI engineering - cinematic experiences, function calling, vision models, biometrics, character-specific personalities, hybrid audio system, and interactive effects. The startup videos alone are 55+ MB of immersive content. Plus, users love discovering the hidden easter eggs!"*
 
 ## 💡 KEY INNOVATIONS
 
@@ -399,13 +427,23 @@ Parallel AI orchestration for multi-perspective analysis:
 - Perfect for decision-making and brainstorming
 - Demonstrates advanced state management and API orchestration
 
-### **7. Procedural Audio System** ⭐ NEW
-Web Audio API for dynamic sound generation:
-- No external audio files (lightweight, fast)
-- Character-specific synthesized sound effects
-- Real-time audio generation with oscillators
+### **7. Hybrid Audio System** ⭐ NEW
+Combining MP3 files with Web Audio API:
+- Character-specific MP3 sound files (SilentProtector.mp3, evil-laugh-89423.mp3)
+- Sound caching for performance (loaded once, reused)
+- Procedural fallbacks using Web Audio API
 - Mute/unmute control for accessibility
-- Professional sound design with minimal overhead
+- Professional sound design with optimal quality
+
+### **8. Cinematic Startup Experience** ⭐ NEW
+Mode-aware video playback system:
+- **3 Character-Specific Videos**: Batman (Batmobile), Alfred (Manor), Joker (Chaos)
+- **Dynamic Import System**: Videos loaded via Vite's asset bundling
+- **Mode-Aware Logic**: Only plays for character modes (not Council)
+- **Responsive Scaling**: `object-contain` ensures full video visibility on all screens
+- **Skip Functionality**: Click anywhere to skip, auto-transitions when complete
+- **Total Size**: 55.6 MB (batmobileIntro: 18.6 MB, batmanIntro: 44.2 mb, AlfredIntro: 14.8 MB, JokerIntro: 22.2 MB)
+- **File Format**: MP4 with audio, optimized for web playback
 
 ---
 
@@ -500,6 +538,58 @@ const tools = [
   { name: "get_weather", description: "Get weather" },
   { name: "get_current_time", description: "Get time/date" }
 ];
+```
+
+### Startup Video System
+```typescript
+// Import character-specific videos
+let batmanVideo: string | null = null;
+let alfredVideo: string | null = null;
+let jokerVideo: string | null = null;
+
+try {
+  batmanVideo = new URL('../assets/batmanIntro.mp4', import.meta.url).href;
+  alfredVideo = new URL('../assets/AlfredIntro.mp4', import.meta.url).href;
+  jokerVideo = new URL('../assets/JokerIntro.mp4', import.meta.url).href;
+} catch (e) {
+  console.warn('Intro videos not found');
+}
+
+// Select video based on current theme
+const videoSource = theme === 'batman' ? batmanVideo
+  : theme === 'alfred' ? alfredVideo
+  : theme === 'joker' ? jokerVideo
+  : null;
+
+// Only show video for character modes (not Council)
+setShowStartupVideo(theme === 'batman' || theme === 'alfred' || theme === 'joker');
+```
+
+### Hybrid Audio System
+```typescript
+// Import sound files
+let silentProtectorSound: string | null = null;
+let evilLaughSound: string | null = null;
+
+try {
+  silentProtectorSound = new URL('../assets/SilentProtector.mp3', import.meta.url).href;
+  evilLaughSound = new URL('../assets/evil-laugh-89423.mp3', import.meta.url).href;
+} catch (e) {
+  console.warn('Sound files not found');
+}
+
+// Play with caching
+private playSound(soundUrl: string, volume: number = 1.0) {
+  let audio = this.soundCache.get(soundUrl);
+  if (!audio) {
+    audio = new Audio(soundUrl);
+    this.soundCache.set(soundUrl, audio);
+  } else {
+    audio.currentTime = 0; // Reset for replay
+  }
+  audio.volume = volume * this.effectsVolume;
+  audio.play();
+}
 ```
 
 ---

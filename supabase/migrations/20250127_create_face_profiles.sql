@@ -14,11 +14,23 @@ CREATE INDEX IF NOT EXISTS idx_face_profiles_user_name ON face_profiles(user_nam
 -- Create index on created_at for sorting
 CREATE INDEX IF NOT EXISTS idx_face_profiles_created_at ON face_profiles(created_at DESC);
 
--- Add RLS policies
-ALTER TABLE face_profiles ENABLE ROW LEVEL SECURITY;
+-- Add RLS policies (safely)
+DO $$
+BEGIN
+  ALTER TABLE face_profiles ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN others THEN null;
+END $$;
 
 -- Policy to allow all operations (since this is a demo/personal app)
-CREATE POLICY "Allow all operations on face_profiles" ON face_profiles
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'face_profiles' AND policyname = 'Allow all operations on face_profiles'
+  ) THEN
+    CREATE POLICY "Allow all operations on face_profiles" ON face_profiles
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;

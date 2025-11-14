@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,14 +12,19 @@ serve(async (req) => {
   }
 
   try {
-    const { message, characterMode = 'batman', image, stream = true, disableTools = false } = await req.json();
+    const { message, characterMode = 'batman', image, stream = true, disableTools = false, userId = 'anonymous' } = await req.json();
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
 
     if (!GROQ_API_KEY) {
       throw new Error("GROQ_API_KEY is not configured");
     }
 
-    console.log("Received message:", message, "Character mode:", characterMode, "Has image:", !!image, "Stream:", stream, "Disable tools:", disableTools);
+    // Initialize Supabase client for memory storage
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+    console.log("Received message:", message, "Character mode:", characterMode, "Has image:", !!image, "Stream:", stream, "Disable tools:", disableTools, "User:", userId);
 
     // Define available tools/functions
     const tools = [
@@ -189,6 +195,10 @@ serve(async (req) => {
       userContent = message;
     }
 
+    // Streaming and tools are mutually exclusive - when streaming is requested, prioritize it
+    const enableStreaming = stream;
+    const enableTools = !stream && !image && !disableTools;
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -209,9 +219,9 @@ serve(async (req) => {
         ],
         temperature: characterMode === 'batman' ? 0.5 : characterMode === 'alfred' ? 0.7 : 0.9, // Batman focused, Alfred refined, Joker chaotic
         max_tokens: image ? 1024 : (characterMode === 'batman' ? 512 : characterMode === 'alfred' ? 1024 : 800), // More tokens for image analysis
-        stream: false, // Disable streaming to support function calling properly
-        tools: (!image && !disableTools) ? tools : undefined, // Enable tools only for text mode (not images) and when not disabled
-        tool_choice: (!image && !disableTools) ? "auto" : undefined, // Let AI decide when to use tools
+        stream: enableStreaming, // Enable streaming when requested (disables tools)
+        tools: enableTools ? tools : undefined, // Enable tools only when not streaming, not images, and not explicitly disabled
+        tool_choice: enableTools ? "auto" : undefined, // Let AI decide when to use tools
       }),
     });
 
@@ -229,7 +239,85 @@ serve(async (req) => {
       throw new Error(`Groq API error: ${response.status}`);
     }
 
-    // All responses are now non-streaming to support function calling
+    // Handle streaming responses
+    if (enableStreaming && response.body) {
+      console.log("Streaming response enabled");
+
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      let fullResponse = ''; // Collect full response for memory storage
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          const reader = response.body!.getReader();
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+
+              if (done) {
+                // Send completion signal
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                controller.close();
+
+                // Store memory after stream completes (for non-council mode)
+                if (characterMode !== 'council' && supabase && fullResponse) {
+                  storeMemory(supabase, userId, characterMode, message, fullResponse)
+                    .catch(err => console.error('Error storing streamed memory:', err));
+                }
+
+                break;
+              }
+
+              // Decode the chunk
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = line.slice(6); // Remove 'data: ' prefix
+
+                  if (data === '[DONE]') {
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                    continue;
+                  }
+
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+
+                    if (content) {
+                      fullResponse += content; // Collect for memory storage
+
+                      // Transform to frontend format: data: {"content":"text"}\n\n
+                      const message = `data: ${JSON.stringify({ content })}\n\n`;
+                      controller.enqueue(encoder.encode(message));
+                    }
+                  } catch (e) {
+                    // Skip invalid JSON
+                    console.error("Failed to parse SSE chunk:", e);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Stream error:", error);
+            controller.error(error);
+          }
+        }
+      });
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    // All non-streaming responses to support function calling
     const data = await response.json();
     console.log("AI response received");
 
@@ -287,9 +375,16 @@ serve(async (req) => {
       }
 
       const followUpData = await followUpResponse.json();
+      const finalResponse = followUpData.choices[0].message.content;
+
+      // Store memory for non-council mode
+      if (characterMode !== 'council' && supabase) {
+        await storeMemory(supabase, userId, characterMode, message, finalResponse);
+      }
+
       return new Response(
         JSON.stringify({
-          response: followUpData.choices[0].message.content
+          response: finalResponse
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -298,9 +393,16 @@ serve(async (req) => {
     }
 
     // Regular response (no function calls)
+    const finalResponse = aiMessage.content;
+
+    // Store memory for non-council mode
+    if (characterMode !== 'council' && supabase) {
+      await storeMemory(supabase, userId, characterMode, message, finalResponse);
+    }
+
     return new Response(
       JSON.stringify({
-        response: aiMessage.content
+        response: finalResponse
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -317,3 +419,55 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function to store conversation memories
+async function storeMemory(supabase: any, userId: string, characterMode: string, userMessage: string, aiResponse: string) {
+  try {
+    // Calculate importance score (simple heuristic: longer messages = more important)
+    const messageLength = userMessage.length + aiResponse.length;
+    const importanceScore = Math.min(1.0, messageLength / 500); // Cap at 1.0
+
+    const { error } = await supabase
+      .from('conversation_memories')
+      .insert({
+        user_id: userId,
+        character_mode: characterMode,
+        user_message: userMessage,
+        ai_response: aiResponse,
+        importance_score: importanceScore,
+      });
+
+    if (error) {
+      console.error('Error storing memory:', error);
+    } else {
+      console.log(`Memory stored for ${characterMode} - user: ${userId}`);
+    }
+
+    // Every 5 conversations, trigger profile update (async, don't wait)
+    const { count } = await supabase
+      .from('conversation_memories')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('character_mode', characterMode);
+
+    if (count && count % 5 === 0) {
+      console.log(`Triggering profile update for ${characterMode} after ${count} conversations`);
+      // Trigger update-profile function (fire and forget)
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+      if (supabaseUrl && supabaseAnonKey) {
+        fetch(`${supabaseUrl}/functions/v1/update-profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({ userId, characterMode }),
+        }).catch(err => console.error('Error triggering profile update:', err));
+      }
+    }
+  } catch (error) {
+    console.error('Error in storeMemory:', error);
+  }
+}

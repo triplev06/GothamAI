@@ -8,12 +8,12 @@ interface StartupVideoProps {
 }
 
 // Import video files
-let batmobileVideo: string | null = null;
+let batmanVideo: string | null = null;
 let alfredVideo: string | null = null;
 let jokerVideo: string | null = null;
 
 try {
-  batmobileVideo = new URL('../assets/batmobileIntro.mp4', import.meta.url).href;
+  batmanVideo = new URL('../assets/batmanIntro.mp4', import.meta.url).href;
 } catch (e) {
   console.warn('Batmobile intro video not found');
 }
@@ -34,7 +34,7 @@ const StartupVideo = ({ onComplete, theme }: StartupVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Select video based on theme
-  const videoSource = theme === 'batman' ? batmobileVideo
+  const videoSource = theme === 'batman' ? batmanVideo
     : theme === 'alfred' ? alfredVideo
     : theme === 'joker' ? jokerVideo
     : null;

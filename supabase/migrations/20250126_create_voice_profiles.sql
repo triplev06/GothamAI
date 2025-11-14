@@ -14,11 +14,23 @@ CREATE INDEX IF NOT EXISTS idx_voice_profiles_user_name ON voice_profiles(user_n
 -- Create index on created_at for querying recent profiles
 CREATE INDEX IF NOT EXISTS idx_voice_profiles_created_at ON voice_profiles(created_at);
 
--- Enable Row Level Security
-ALTER TABLE voice_profiles ENABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security (safely)
+DO $$
+BEGIN
+  ALTER TABLE voice_profiles ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN others THEN null;
+END $$;
 
 -- Create policy to allow all operations (you can restrict this based on your auth setup)
-CREATE POLICY "Allow all operations on voice_profiles" ON voice_profiles
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'voice_profiles' AND policyname = 'Allow all operations on voice_profiles'
+  ) THEN
+    CREATE POLICY "Allow all operations on voice_profiles" ON voice_profiles
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
