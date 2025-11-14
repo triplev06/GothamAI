@@ -8,12 +8,14 @@ const Index = () => {
   const { theme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<string>("");
+  const [authenticatedUserProfileId, setAuthenticatedUserProfileId] = useState<string>("");
   const [showWelcome, setShowWelcome] = useState(true);
   const [showStartupVideo, setShowStartupVideo] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
 
-  const handleAuthentication = (userName: string) => {
+  const handleAuthentication = (userName: string, userProfileId: string) => {
     setAuthenticatedUser(userName);
+    setAuthenticatedUserProfileId(userProfileId);
     setIsAuthenticated(true);
     // Show startup video if in Batman, Alfred, or Joker mode (not Council)
     setShowStartupVideo(theme === 'batman' || theme === 'alfred' || theme === 'joker');
@@ -51,7 +53,7 @@ const Index = () => {
   // Show main app after video completes
   return (
     <div className="relative">
-      <ChatInterface />
+      <ChatInterface userProfileId={authenticatedUserProfileId} />
 
       {/* Welcome message display - auto-hides on mobile after 3 seconds */}
       {showWelcome && (
@@ -59,7 +61,9 @@ const Index = () => {
           <p className="text-sm">
             Welcome, <strong>{authenticatedUser}</strong>
           </p>
-          <p className="text-xs opacity-80">Verified by Voice + Face</p>
+          <p className="text-xs opacity-80">
+            {authenticatedUser === "Guest" ? "Guest Mode" : "Verified by Voice + Face"}
+          </p>
         </div>
       )}
     </div>

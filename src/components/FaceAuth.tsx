@@ -16,7 +16,7 @@ interface FaceProfileWithUser {
   user_name: string;
   face_features: number[];
   user_profile_id: string;
-  user_profiles: {
+  auth_user_profiles: {
     user_name: string;
   };
 }
@@ -188,7 +188,7 @@ export function FaceAuth({ onSuccess, onCancel }: FaceAuthProps) {
           .from("face_profiles")
           .select(`
             *,
-            user_profiles!inner (
+            auth_user_profiles!inner (
               user_name
             )
           `);
@@ -223,7 +223,7 @@ export function FaceAuth({ onSuccess, onCancel }: FaceAuthProps) {
 
         for (const profile of profiles as unknown as FaceProfileWithUser[]) {
           // Skip profiles without proper user_profile linkage
-          if (!profile.user_profile_id || !profile.user_profiles) {
+          if (!profile.user_profile_id || !profile.auth_user_profiles) {
             console.warn("Skipping face profile without user_profile linkage:", profile.id);
             continue;
           }
@@ -241,7 +241,7 @@ export function FaceAuth({ onSuccess, onCancel }: FaceAuthProps) {
 
           if (similarity > bestMatch.score) {
             bestMatch = {
-              name: profile.user_profiles.user_name,
+              name: profile.auth_user_profiles.user_name,
               score: similarity,
               id: profile.id,
               userProfileId: profile.user_profile_id,

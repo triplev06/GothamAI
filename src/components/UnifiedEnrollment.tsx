@@ -45,7 +45,7 @@ export function UnifiedEnrollment({ onComplete, onCancel }: UnifiedEnrollmentPro
 
     // Check if username already exists
     const { data: existingProfile } = await supabase
-      .from("user_profiles")
+      .from("auth_user_profiles")
       .select("id")
       .eq("user_name", userName.trim())
       .single();
@@ -61,7 +61,7 @@ export function UnifiedEnrollment({ onComplete, onCancel }: UnifiedEnrollmentPro
 
     // Create user profile
     const { data: newProfile, error } = await supabase
-      .from("user_profiles")
+      .from("auth_user_profiles")
       .insert({
         user_name: userName.trim(),
         password_hash: null,

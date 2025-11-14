@@ -38,7 +38,11 @@ interface CouncilResponse {
   joker: string;
 }
 
-const ChatInterface = () => {
+interface ChatInterfaceProps {
+  userProfileId: string;
+}
+
+const ChatInterface = ({ userProfileId }: ChatInterfaceProps) => {
   const { theme } = useTheme();
 
   const getInitialMessage = () => {
@@ -70,15 +74,6 @@ const ChatInterface = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  // Get or create unique userId for memory system
-  const [userId] = useState(() => {
-    const stored = localStorage.getItem('gotham_ai_user_id');
-    if (stored) return stored;
-    const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('gotham_ai_user_id', newId);
-    return newId;
-  });
 
   // Initialize TTS voices and sound on mount
   useEffect(() => {
@@ -220,7 +215,7 @@ const ChatInterface = () => {
             characterMode: theme,
             image: imageToSend,
             stream: true,
-            userId: userId,
+            userId: userProfileId,
           }),
         }
       );
@@ -447,7 +442,7 @@ const ChatInterface = () => {
             message: text.trim(),
             characterMode: theme,
             stream: true,
-            userId: userId,
+            userId: userProfileId,
           }),
         }
       );
@@ -900,7 +895,7 @@ const ChatInterface = () => {
       <UserSummary
         isOpen={isUserSummaryOpen}
         onClose={() => setIsUserSummaryOpen(false)}
-        userId={userId}
+        userId={userProfileId}
       />
     </div>
   );

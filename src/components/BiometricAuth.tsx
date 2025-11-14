@@ -6,14 +6,14 @@ import { FaceAuth } from "./FaceAuth";
 import { PasswordAuth } from "./PasswordAuth";
 import { UnifiedEnrollment } from "./UnifiedEnrollment";
 import { ThemeToggle } from "./ThemeToggle";
-import { Mic, Camera, UserPlus, CheckCircle2, Circle, Lock } from "lucide-react";
+import { Mic, Camera, UserPlus, CheckCircle2, Circle, Lock, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { extractVoiceFeatures, compareVoiceFeatures, VoiceFeatures } from "@/utils/voiceBiometrics";
 
 interface BiometricAuthProps {
-  onAuthenticated: (userName: string) => void;
+  onAuthenticated: (userName: string, userProfileId: string) => void;
 }
 
 interface AuthStatus {
@@ -26,7 +26,7 @@ interface VoiceProfileWithUser {
   user_name: string;
   voice_features: VoiceFeatures;
   user_profile_id: string;
-  user_profiles: {
+  auth_user_profiles: {
     user_name: string;
   };
 }
@@ -61,7 +61,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
             : `Welcome to the madness, ${authStatus.voice.userName}. HAHAHA!`,
           duration: isMobile ? 3000 : 5000, // 3 seconds on mobile, 5 seconds on desktop
         });
-        onAuthenticated(authStatus.voice.userName);
+        onAuthenticated(authStatus.voice.userName, authStatus.voice.userProfileId);
       } else {
         toast({
           title: theme === 'batman' ? "Security Breach Detected" : "Authentication Mismatch",
@@ -132,7 +132,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
     setMode("auth");
   };
 
-  const handlePasswordAuthSuccess = (userName: string) => {
+  const handlePasswordAuthSuccess = (userName: string, userProfileId: string) => {
     // Password bypasses biometric requirements
     const isMobile = window.innerWidth < 768;
 
@@ -141,7 +141,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
       description: `Welcome to the Batcave, ${userName}.`,
       duration: isMobile ? 3000 : 5000,
     });
-    onAuthenticated(userName);
+    onAuthenticated(userName, userProfileId);
   };
 
   const authenticateWithVoice = async () => {
@@ -183,7 +183,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
           .from("voice_profiles")
           .select(`
             *,
-            user_profiles!inner (
+            auth_user_profiles!inner (
               user_name
             )
           `);
@@ -205,7 +205,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
 
         for (const profile of profiles as unknown as VoiceProfileWithUser[]) {
           // Skip profiles without proper user_profile linkage
-          if (!profile.user_profile_id || !profile.user_profiles) {
+          if (!profile.user_profile_id || !profile.auth_user_profiles) {
             console.warn("Skipping voice profile without user_profile linkage:", profile.id);
             continue;
           }
@@ -214,7 +214,7 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
 
           if (similarity > bestMatch.score) {
             bestMatch = {
-              name: profile.user_profiles.user_name,
+              name: profile.auth_user_profiles.user_name,
               score: similarity,
               userProfileId: profile.user_profile_id,
             };
@@ -437,11 +437,28 @@ export function BiometricAuth({ onAuthenticated }: BiometricAuthProps) {
                 )}
               </TabsContent>
             </Tabs>
-          ) : (
+          ) : mode === "enroll" ? (
             <UnifiedEnrollment
               onComplete={handleEnrollmentComplete}
               onCancel={() => setMode("auth")}
             />
+          ) : null}
+
+          {/* Guest Sign-In Button - Always visible in auth mode */}
+          {mode === "auth" && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <Button
+                onClick={() => onAuthenticated("Guest", "00000000-0000-0000-0000-000000000001")}
+                variant="secondary"
+                className="w-full"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Continue as Guest
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                No authentication required. Your conversations will not be saved permanently.
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

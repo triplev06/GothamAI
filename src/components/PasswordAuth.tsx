@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { verifyPassword } from "@/utils/passwordAuth";
 
 interface PasswordAuthProps {
-  onSuccess: (userName: string) => void;
+  onSuccess: (userName: string, userProfileId: string) => void;
 }
 
 export function PasswordAuth({ onSuccess }: PasswordAuthProps) {
@@ -35,7 +35,7 @@ export function PasswordAuth({ onSuccess }: PasswordAuthProps) {
     try {
       // Fetch user profile
       const { data: profile, error } = await supabase
-        .from("user_profiles")
+        .from("auth_user_profiles")
         .select("*")
         .eq("user_name", userName)
         .single();
@@ -68,7 +68,7 @@ export function PasswordAuth({ onSuccess }: PasswordAuthProps) {
           title: "Authentication Successful",
           description: `Welcome back, ${userName}!`,
         });
-        onSuccess(userName);
+        onSuccess(userName, profile.id);
       } else {
         toast({
           title: "Authentication Failed",

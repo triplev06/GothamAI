@@ -53,7 +53,7 @@ export function PasswordSetup({ userName, onComplete, onSkip }: PasswordSetupPro
 
       // Check if user profile exists
       const { data: existingProfile } = await supabase
-        .from("user_profiles")
+        .from("auth_user_profiles")
         .select("id")
         .eq("user_name", userName)
         .single();
@@ -61,7 +61,7 @@ export function PasswordSetup({ userName, onComplete, onSkip }: PasswordSetupPro
       if (existingProfile) {
         // Update existing profile
         const { error } = await supabase
-          .from("user_profiles")
+          .from("auth_user_profiles")
           .update({ password_hash: passwordHash })
           .eq("user_name", userName);
 
@@ -69,7 +69,7 @@ export function PasswordSetup({ userName, onComplete, onSkip }: PasswordSetupPro
       } else {
         // Create new profile
         const { error } = await supabase
-          .from("user_profiles")
+          .from("auth_user_profiles")
           .insert({
             user_name: userName,
             password_hash: passwordHash,
