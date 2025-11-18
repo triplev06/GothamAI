@@ -38,9 +38,9 @@ This isn't just another AI chatbot. This is a **multi-modal AI experience** feat
 
 ### 🎬 **Cinematic Startup Videos**
 - **Character-Specific Intro Videos**: Each mode has its own cinematic startup animation
-  - **Batman**: AI-generated Batmobile startup sequence (18.6 MB, 8 seconds)
-  - **Alfred**: Elegant British manor intro with refined atmosphere (14.8 MB)
-  - **Joker**: Chaotic intro from Batman: Three Jokers trailer (22.2 MB, 8 seconds)
+  - **Batman**: Lego Batman intro clip (16 seconds)
+  - **Alfred**: Lego Batman alfred piano clip (14 seconds)
+  - **Joker**: Lego Batman Joker hijaking plane clip (12 seconds)
 - **Full-Screen Experience**: Videos play after biometric authentication
 - **Click-to-Skip**: Users can skip videos by clicking anywhere
 - **Responsive Scaling**: Videos fit all screen sizes with `object-contain`
@@ -123,6 +123,214 @@ Three distinct visual themes that adapt to each character:
 - **Batman**: Gold accents, dark Gotham aesthetics
 - **Alfred**: Silver accents, elegant refinement
 - **Joker**: Purple/green chaos with animated effects
+
+### 🎮 **Batman-Themed Mini Games**
+Take a break from saving Gotham with AI and try your hand at these Batman-themed games!
+
+#### **Game Collection:**
+Access via the "Games" button in the main header - 5 fully-featured games:
+
+**1. 🦇 Bat-Sweeper (Minesweeper)**
+- 10×10 grid with 15 Joker traps 🃏
+- Left-click to reveal, right-click to flag
+- Timer and move counter
+- Smart flood-fill algorithm
+- Sound effects: start, click, win, lose
+
+**2. ⚔️ Bat vs Joker (Tic Tac Toe)**
+- Smart AI using Minimax algorithm (unbeatable!)
+- Batman 🦇 vs Joker 🃏
+- Score tracking across rounds
+- Winning line animations
+- Sound effects: click, win, tie
+
+**3. ✊ Gotham Showdown (Rock Paper Scissors)**
+- Batarang ⭐ vs Grapple Gun 🔫 vs Cape 🦇
+- Win streak tracker with best streak record
+- Animated battle arena
+- Real-time stat display
+
+**4. 🎴 Detective's Memory (Memory Card Flip)**
+- 8 pairs of Batman symbols
+- Timer, move counter, and accuracy tracker
+- Best time/moves leaderboard
+- Smooth flip animations
+- Sound effects: flip, win
+
+**5. 🏙️ Gotham Protector (Cookie Clicker)** ⭐ FEATURE-RICH!
+
+##### **Core Mechanics:**
+- **Click System**: Earn citizens by clicking the bat button
+- **Passive Income**: Buy upgrades for automatic citizen generation
+- **8 Upgrades**: Batarang → Grapple Gun → Batmobile → Robin → Batcave → Watchtower → Alfred AI → Justice League
+- **Exponential Scaling**: Costs increase by 15% per purchase
+
+##### **Click Power System:**
+- **Batarangs**: Every 5 = +1 click power (balanced progression)
+- **Milestone Bonuses**: Every 10 levels on ANY upgrade = +1 click power
+- **Visual Progress Bars**: Track progress to next bonus
+- **Stacking System**: All bonuses add together
+
+##### **Citizens Tab** 👥 (Permanent Upgrades):
+Switch between "Upgrades" and "Citizens" tabs for permanent boosts!
+
+**Grapple Gun Boosts:**
+- Reinforced Cable (1K) - 2× effectiveness
+- Quick Deploy (5K) - +5 citizens/sec
+- Auto-Retract (50K) - 3× effectiveness
+
+**Batmobile Boosts:**
+- Turbo Engine (11K) - 2× effectiveness
+- Armor Plating (55K) - +50 citizens/sec
+- AI Autopilot (550K) - 3× effectiveness
+
+**Robin Boosts:**
+- Combat Training (120K) - 2× effectiveness
+- Team Tactics (600K) - +500 citizens/sec
+- Nightwing Protocol (6M) - 3× effectiveness
+
+**Batcave Boosts:**
+- Supercomputer (1.3M) - 2× effectiveness
+- Crime Lab (6.5M) - +3K citizens/sec
+- Advanced Security (65M) - 3× effectiveness
+
+**Global Boosts:**
+- Gotham United (100K) - +10% all production
+- City-Wide Alert (1M) - +25% all production
+- Hope Restored (10M) - +50% all production
+
+##### **Golden Cookie** 🦇✨ (Batman Logo - Frequent Bonus):
+- **Image**: Uses `batman_logo.png` (80×80px)
+- **Spawn Rate**: Every **10-30 seconds** (super frequent!)
+- **Bonus Amount**: **10×-100× your current saves/sec**
+- **Duration**: 10 seconds to click
+- **Smart Spawning**: Appears near your mouse cursor (never off-screen)
+- **Visual Effects**:
+  - Yellow/amber triple-layer glowing rings
+  - Pinging outer ring animation (150px)
+  - Bouncing animation (batBounce)
+  - Brightness pulse effect
+  - Shows exact bonus amount below logo
+- **Sound Effects**: Click sound on collection + notification
+
+##### **Diamond Cookie** 💎✨ (Blue Batman - MEGA Bonus):
+- **Image**: Uses `blue_batman.png` (80×80px)
+- **Spawn Rate**: Every **60-180 seconds** (1-3 minutes, rare!)
+- **Bonus Amount**: **1000×-100000× your current saves/sec** (MASSIVE!)
+- **Duration**: 10 seconds to click
+- **Smart Spawning**: Appears near your mouse cursor (never off-screen)
+- **Visual Effects**:
+  - Blue/cyan triple-layer glowing rings
+  - Pinging outer ring animation (150px)
+  - Bouncing animation (batBounce)
+  - Enhanced brightness pulse (1.5× brighter)
+  - Shows exact bonus with 💎 emoji
+- **Sound Effects**: Click sound on collection + notification
+- **Rarity**: Much rarer than Golden Cookie, but rewards are 10-1000× higher!
+
+##### **Brainrot Mode** 🧟📹 (Subway Surfers Split-Screen):
+The ultimate engagement mode! Click the 🧟 Brainrot button to activate split-screen mode.
+
+**Desktop Layout:**
+- **Left Half**: Cookie Clicker game (all panels stacked vertically)
+- **Right Half**: Subway Surfers video (`subway_surfers.mp4`)
+- 50/50 split using flexbox layout
+- Game section is scrollable if content overflows
+
+**Mobile Layout:**
+- **Top Half**: Cookie Clicker game
+- **Bottom Half**: Subway Surfers video
+- Vertical stack for optimal mobile experience
+
+**Video Features:**
+- ✅ Auto-plays when brainrot mode is enabled
+- ✅ Loops continuously (infinite playback)
+- ✅ Muted by default (autoplay compliance)
+- ✅ Centered with `object-contain` (shows entire video)
+- ✅ Purple border matching brainrot theme
+- ✅ Responsive sizing (fills allocated space)
+- ✅ High-quality 297MB video file
+
+**Button States:**
+- Normal: Purple border, "Brainrot" text
+- Active: Purple background glow, "Normal" text to toggle back
+
+**Why "Brainrot Mode"?**
+Maximum engagement while you idle! Watch Subway Surfers while passively earning citizens. Perfect for multitasking or just having fun with the ultimate internet culture reference.
+
+##### **Save/Load System** 💾📂:
+- **Export** 💾: Download your game as JSON file
+- **Import** 📂: Load saved game from file
+- **Auto-naming**: Files named `gotham-protector-save-[timestamp].json`
+- **Full State**: Saves all progress, upgrades, and purchases
+- **Validation**: Checks file integrity before loading
+- **Notifications**: Success/failure feedback
+
+##### **Advanced Features:**
+- **Decimal Precision**: Shows accurate values (0.10/sec, 1.50/sec, etc.)
+- **Number Formatting**: K, M, B, T abbreviations for large numbers
+- **Achievement System**: 4 built-in achievements with progress tracking
+- **Milestone Notifications**: Animated popups for upgrades (🦇 +X Click Power!)
+- **Tab System**: Clean switching between Upgrades and Citizens
+- **Progress Tracking**: Visual bars for Batarang and Milestone progress
+- **Multiplier Stacking**: All citizen upgrades stack multiplicatively
+
+##### **Strategy Example:**
+```
+Base: 10 Grapple Guns × 1 saves/sec = 10/sec
+Buy "Reinforced Cable" (2×): = 20/sec
+Buy "Auto-Retract" (3×): = 60/sec
+Buy "Gotham United" (+10%): = 66/sec
+Result: 6.6× boost from citizen upgrades!
+```
+
+##### **Game Balance:**
+- **Early game**: Focus on clicking and basic upgrades
+- **Mid game**: Unlock citizen upgrades for exponential growth
+- **Late game**: Stack multipliers and hunt for cookies
+- **Golden Cookies** (10-30s): Frequent small-medium bonuses (10×-100×)
+- **Diamond Cookies** (1-3min): Rare but MASSIVE bonuses (1000×-100000×)
+- **Brainrot Mode**: Perfect for idle play - watch video while game runs
+- **Strategy**: Golden cookies provide steady boost, Diamond cookies are jackpots!
+
+##### **Sound Design:**
+- Click sound on main button
+- Upgrade sound on purchases
+- Smooth audio feedback on all actions
+
+#### **Navigation:**
+- **Games Button**: In main app header (next to Profile)
+- **Game Selection Menu**: Beautiful grid layout with hover effects
+- **Individual Games**: Click any card to play
+- **Return**: Back button in each game to return to menu
+
+#### **Technical Features:**
+- **Responsive Design**: All games work on mobile and desktop
+- **Batman Theming**: Consistent gold/yellow color scheme
+- **Smooth Animations**: CSS transitions and transforms
+- **Sound Integration**: Pixabay sound effects (royalty-free)
+- **State Management**: React hooks for game logic
+- **TypeScript**: Full type safety
+
+#### **File Structure:**
+```
+src/
+├── pages/
+│   └── Games.tsx              # Main game selection page
+├── components/
+│   └── games/
+│       ├── BatmanMinesweeper.tsx
+│       ├── BatmanTicTacToe.tsx
+│       ├── BatmanRockPaperScissors.tsx
+│       ├── BatmanMemoryGame.tsx
+│       └── BatmanCookieClicker.tsx
+└── assets/
+    ├── minesweeper/           # click.mp3, lose.wav, start.wav, win.mp3
+    ├── tic-tac-toe/           # click.mp3, tie.mp3, win.mp3
+    ├── memory/                # flip.mp3, win.mp3
+    └── cookie-clicker/        # click.mp3, upgrade.wav, batman_logo.png,
+                               # blue_batman.png, subway_surfers.mp4 (297MB)
+```
 
 ## 💪 THE TECH STACK
 
@@ -324,6 +532,22 @@ Schema is auto-created on first authentication attempt.
 ✅ **NEW**: 15+ hidden easter eggs with visual + audio effects
 ✅ **NEW**: Council mode for multi-perspective analysis
 ✅ **NEW**: Click-to-skip video intros for accessibility
+✅ **NEW**: 5 Batman-themed mini-games with full sound integration
+
+### **Game Development**
+✅ Feature-rich incremental game (Gotham Protector Cookie Clicker)
+✅ Citizens upgrade system with 18+ permanent boosts
+✅ **NEW**: Dual bonus cookie system (Golden + Diamond)
+✅ **NEW**: Golden Cookie spawns every 10-30s (10×-100× bonus)
+✅ **NEW**: Diamond Cookie spawns every 1-3min (1000×-100000× bonus)
+✅ **NEW**: Brainrot Mode - split-screen with Subway Surfers video (297MB)
+✅ Save/load system with JSON export/import
+✅ Balanced progression with milestone bonuses
+✅ 4 additional arcade-style games (Minesweeper, Tic-Tac-Toe, RPS, Memory)
+✅ Minimax AI for unbeatable Tic-Tac-Toe opponent
+✅ Triple-layer glowing visual effects (yellow/amber + blue/cyan)
+✅ Mouse-tracking spawn system with viewport clamping
+✅ Video integration with autoplay, loop, and responsive centering
 
 ### **100% Free Resources**
 ✅ Groq API - Free tier (500k tokens/day)

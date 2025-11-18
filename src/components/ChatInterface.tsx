@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, X, Download, HelpCircle, Volume2, VolumeX, Users, User } from "lucide-react";
+import { Send, Image as ImageIcon, X, Download, HelpCircle, Volume2, VolumeX, Users, User, Gamepad2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,6 +45,7 @@ interface ChatInterfaceProps {
 
 const ChatInterface = ({ userProfileId }: ChatInterfaceProps) => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const getInitialMessage = () => {
     if (theme === 'batman') {
@@ -701,6 +703,22 @@ const ChatInterface = ({ userProfileId }: ChatInterfaceProps) => {
               >
                 <User className="w-4 h-4 mr-2" />
                 Profile
+              </Button>
+              <Button
+                onClick={() => navigate('/games')}
+                variant="outline"
+                size="sm"
+                className={`${
+                  theme === 'batman'
+                    ? 'hover:border-primary hover:glow-gold'
+                    : theme === 'alfred'
+                    ? 'hover:border-primary hover-silver-glow'
+                    : 'hover:border-primary hover-chaos-glow'
+                } transition-all`}
+                title="Play Batman-themed mini games"
+              >
+                <Gamepad2 className="w-4 h-4 mr-2" />
+                Games
               </Button>
               <Button
                 onClick={() => {
