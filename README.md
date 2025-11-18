@@ -249,7 +249,7 @@ The ultimate engagement mode! Click the 🧟 Brainrot button to activate split-s
 - ✅ Centered with `object-contain` (shows entire video)
 - ✅ Purple border matching brainrot theme
 - ✅ Responsive sizing (fills allocated space)
-- ✅ High-quality 297MB video file
+- ✅ Optimized 90MB video file
 
 **Button States:**
 - Normal: Purple border, "Brainrot" text
@@ -329,7 +329,7 @@ src/
     ├── tic-tac-toe/           # click.mp3, tie.mp3, win.mp3
     ├── memory/                # flip.mp3, win.mp3
     └── cookie-clicker/        # click.mp3, upgrade.wav, batman_logo.png,
-                               # blue_batman.png, subway_surfers.mp4 (297MB)
+                               # blue_batman.png, subway_surfers.mp4 (90MB)
 ```
 
 ## 💪 THE TECH STACK
@@ -540,7 +540,7 @@ Schema is auto-created on first authentication attempt.
 ✅ **NEW**: Dual bonus cookie system (Golden + Diamond)
 ✅ **NEW**: Golden Cookie spawns every 10-30s (10×-100× bonus)
 ✅ **NEW**: Diamond Cookie spawns every 1-3min (1000×-100000× bonus)
-✅ **NEW**: Brainrot Mode - split-screen with Subway Surfers video (297MB)
+✅ **NEW**: Brainrot Mode - split-screen with Subway Surfers video (90MB)
 ✅ Save/load system with JSON export/import
 ✅ Balanced progression with milestone bonuses
 ✅ 4 additional arcade-style games (Minesweeper, Tic-Tac-Toe, RPS, Memory)
