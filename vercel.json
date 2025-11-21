@@ -1,5 +1,4 @@
 {
-  "installCommand": "git lfs install && git lfs pull && npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
